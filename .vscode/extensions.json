@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "biomejs.biome",
+    "Prisma.prisma",
+    "vitest.explorer",
+    "mikestead.dotenv",
+    "christian-kohler.path-intellisense",
+    "humao.rest-client",
+    "eamodio.gitlens",
+    "streetsidesoftware.code-spell-checker"
+  ]
+}

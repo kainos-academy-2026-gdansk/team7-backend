@@ -1,0 +1,48 @@
+{
+  "name": "team7-backend",
+  "version": "1.0.0",
+  "description": "Team7 Backend",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "format": "biome format --write .",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "lint:fix:unsafe": "biome lint --write --unsafe .",
+    "check": "biome check --write .",
+    "ci:check": "biome ci .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kainos-academy-2026-gdansk/team7-backend.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kainos-academy-2026-gdansk/team7-backend/issues"
+  },
+  "homepage": "https://github.com/kainos-academy-2026-gdansk/team7-backend#readme",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.1.2",
+    "@types/supertest": "^7.2.1",
+    "@vitest/coverage-v8": "^4.1.10",
+    "supertest": "^7.2.2",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.23.5",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
+  },
+  "vitest": {
+    "environment": "node"
+  }
+}
