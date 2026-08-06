@@ -12,7 +12,7 @@ describe("App.ts", () => {
       expect(result.body).toHaveProperty("status", "UP");
       expect(typeof result.body.timestamp).toBe("string");
       const date = new Date(result.body.timestamp);
-      expect(date).not.toBeNull();
+      expect(Number.isNaN(date.getTime())).toBe(false);
     });
   });
 });
