@@ -5,7 +5,13 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "format": "biome format --write .",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "lint:fix:unsafe": "biome lint --write --unsafe .",
+    "check": "biome check --write .",
+    "ci:check": "biome ci ."
   },
   "repository": {
     "type": "git",
@@ -22,6 +28,7 @@
     "express": "^5.2.1"
   },
   "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
     "@types/express": "^5.0.6",
     "@types/node": "^26.1.2",
     "ts-node": "^10.9.2",

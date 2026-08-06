@@ -1,5 +1,6 @@
 {
   "recommendations": [
+    "biomejs.biome",
     "Prisma.prisma",
     "vitest.explorer",
     "mikestead.dotenv",
