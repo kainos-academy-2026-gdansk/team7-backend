@@ -1,7 +1,6 @@
 {
   "recommendations": [
     "Prisma.prisma",
-    "ronnidc.nunjucks",
     "vitest.explorer",
     "mikestead.dotenv",
     "christian-kohler.path-intellisense",
