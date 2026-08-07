@@ -31,7 +31,6 @@
   "homepage": "https://github.com/kainos-academy-2026-gdansk/team7-backend#readme",
   "dependencies": {
     "@prisma/client": "^6.19.3",
-    "@types/morgan": "^1.9.10",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "morgan": "^1.11.0",
@@ -41,6 +40,7 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@types/express": "^5.0.6",
+    "@types/morgan": "^1.9.10",
     "@types/node": "^26.1.2",
     "@types/supertest": "^7.2.1",
     "@vitest/coverage-v8": "^4.1.10",
