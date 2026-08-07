@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+enum JobRoleStatus {
+  OPEN
+  CLOSED
+}
+
+model JobRole {
+  id             Int             @id @default(autoincrement())
+  roleName       String
+  location       String
+  closingDate    DateTime?
+  status         JobRoleStatus
+
+  description    String?
+  openPositions  Int?
+  sharePointLink String?
+
+  bandId         Int
+  capabilityId   Int
+
+  band           Band           @relation(fields: [bandId], references: [id])
+  capability     Capability     @relation(fields: [capabilityId], references: [id])
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([status])
+  @@index([capabilityId])
+  @@index([bandId])
+}
+
+model Band {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+
+  jobRoles JobRole[]
+}
+
+model Capability {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+
+  jobRoles JobRole[]
+}
