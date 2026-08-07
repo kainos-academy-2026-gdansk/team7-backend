@@ -5,8 +5,8 @@ const stream: StreamOptions = {
   write: (message) => Logger.http(message),
 };
 const skip = () => {
-  const env = process.env.NODE_ENV || "development";
-  return env !== "development";
+  const env = process.env.NODE_ENV ?? "development";
+  return env === "test";
 };
 
 const morganMiddleware = morgan(
