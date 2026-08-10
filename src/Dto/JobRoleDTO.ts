@@ -20,7 +20,7 @@ interface JobRoleDetailedDTO {
   location: string;
   capability: string;
   band: string;
-  closingDate: Date | null;
+  closingDate: string | null;
   status: JobRoleStatus;
   numberOfOpenPositions: number;
 }
