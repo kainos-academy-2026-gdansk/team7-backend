@@ -14,6 +14,7 @@ export class JobRoleService {
         roleName: true,
         location: true,
         closingDate: true,
+        status: true,
         band: {
           select: {
             name: true,

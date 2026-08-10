@@ -62,6 +62,7 @@ describe("GET /api/job-roles", () => {
         capability: "Engineering",
         band: "Senior Associate",
         closingDate: null,
+        status: "OPEN",
       },
     ]);
   });

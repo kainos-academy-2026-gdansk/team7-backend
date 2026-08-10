@@ -9,6 +9,7 @@ export interface JobRoleAllResponseDto {
   capability: string;
   band: string;
   closingDate: string | null;
+  status: JobRoleStatus;
 }
 
 interface JobRoleDetailedDTO {

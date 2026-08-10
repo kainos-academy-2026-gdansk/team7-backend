@@ -11,6 +11,7 @@ export class JobRoleMapper {
       capability: role.capability.name,
       band: role.band.name,
       closingDate: role.closingDate ? role.closingDate.toISOString() : null,
+      status: role.status,
     };
   }
   static toJobRoleDetailedDto(jobRoleDetailed: JobRoleDetailed): JobRoleDetailedDTO {

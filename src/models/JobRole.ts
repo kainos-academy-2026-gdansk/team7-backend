@@ -5,6 +5,7 @@ export type JobRoleGetAllSelectPayload = {
   closingDate: Date | null;
   band: { name: string };
   capability: { name: string };
+  status: JobRoleStatus;
 };
 
 interface JobRoleDetailed {
