@@ -1,6 +1,6 @@
 import express from "express";
 import type { Request, Response } from "express";
-import jobRoleRouter from "../src/routes/JobRoleRouter";
+import jobRoleRouter from "./routes/JobRoleRouter";
 import morganMiddleware from "./middlewares/morganMiddleware";
 const app = express();
 
