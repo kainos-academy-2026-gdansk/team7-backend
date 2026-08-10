@@ -1,10 +1,10 @@
 import type { JobRoleAllResponseDto } from "../Dto/JobRoleDto";
-import type { JobRoleWithRelations } from "../models/JobRole";
+import type { JobRoleGetAllSelectPayload } from "../models/JobRole";
 
 export class JobRoleMapper {
   private constructor() {}
 
-  static toAllResponseDto(role: JobRoleWithRelations): JobRoleAllResponseDto {
+  static toAllResponseDto(role: JobRoleGetAllSelectPayload): JobRoleAllResponseDto {
     return {
       roleName: role.roleName,
       location: role.location,

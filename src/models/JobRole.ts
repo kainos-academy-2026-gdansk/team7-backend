@@ -1,4 +1,4 @@
-export type JobRoleWithRelations = {
+export type JobRoleGetAllSelectPayload = {
   roleName: string;
   location: string;
   closingDate: Date | null;

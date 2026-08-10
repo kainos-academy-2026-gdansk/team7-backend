@@ -1,10 +1,7 @@
-import type { JobRole, PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { JobRoleWithRelations } from "../src/models/JobRole";
 import prisma from "../src/prismaClient";
 import { JobRoleService } from "../src/services/JobRoleService";
-
-type JobRoleRow = JobRole & JobRoleWithRelations;
 
 vi.mock("../src/prismaClient", () => ({
   default: {
@@ -23,41 +20,23 @@ describe("JobRoleService.findAll", () => {
   });
 
   it("should return mapped list of job roles", async () => {
-    const rows: JobRoleRow[] = [
+    const rows = [
       {
-        id: 1,
         roleName: "Front-End Engineer",
         location: "Gdansk",
         closingDate: new Date("2026-08-31T00:00:00.000Z"),
-        status: "OPEN",
-        description: null,
-        openPositions: 1,
-        sharePointLink: null,
-        bandId: 1,
-        capabilityId: 1,
-        createdAt: new Date("2026-08-01T00:00:00.000Z"),
-        updatedAt: new Date("2026-08-01T00:00:00.000Z"),
         band: { name: "Associate" },
         capability: { name: "Engineering" },
       },
       {
-        id: 2,
         roleName: "Back-End Engineer",
         location: "Gdansk",
         closingDate: new Date("2026-08-31T00:00:00.000Z"),
-        status: "OPEN",
-        description: null,
-        openPositions: 1,
-        sharePointLink: null,
-        bandId: 1,
-        capabilityId: 1,
-        createdAt: new Date("2026-08-01T00:00:00.000Z"),
-        updatedAt: new Date("2026-08-01T00:00:00.000Z"),
         band: { name: "Associate" },
         capability: { name: "Engineering" },
       },
     ];
-    vi.mocked(prisma.jobRole.findMany).mockResolvedValue(rows);
+    vi.mocked(prisma.jobRole.findMany).mockResolvedValue(rows as any);
 
     const result = await service.findAll();
 
