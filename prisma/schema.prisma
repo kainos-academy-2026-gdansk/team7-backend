@@ -24,6 +24,7 @@ model JobRole {
   description    String?
   openPositions  Int?
   sharePointLink String?
+  responsibilities String?
 
   bandId         Int
   capabilityId   Int
