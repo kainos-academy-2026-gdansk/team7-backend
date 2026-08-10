@@ -36,7 +36,7 @@ const jobRoleDetailedDtoMock: JobRoleDetailedDTO = {
   location: "Gdansk",
   capability: "Engineering",
   band: "Senior Associate",
-  closingDate: new Date("2026-12-31T00:00:00.000Z"),
+  closingDate: "2026-12-31T00:00:00.000Z",
   status: "OPEN",
   numberOfOpenPositions: 3,
 };
