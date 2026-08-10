@@ -23,7 +23,7 @@ export class JobRoleMapper {
       location: jobRoleDetailed.location,
       capability: jobRoleDetailed.capability.name,
       band: jobRoleDetailed.band.name,
-      closingDate: jobRoleDetailed.closingDate,
+      closingDate: jobRoleDetailed.closingDate ? jobRoleDetailed.closingDate.toISOString() : null,
       status: jobRoleDetailed.status,
       numberOfOpenPositions: jobRoleDetailed.numberOfOpenPositions,
     };
