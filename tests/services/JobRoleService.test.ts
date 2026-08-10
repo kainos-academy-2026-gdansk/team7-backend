@@ -1,7 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import prisma from "../src/prismaClient";
-import { JobRoleService } from "../src/services/JobRoleService";
+import prisma from "../../src/prismaClient";
+import { JobRoleService } from "../../src/services/JobRoleService";
 
 vi.mock("../src/prismaClient", () => ({
   default: {
