@@ -49,7 +49,7 @@
           "name": "getByID",
           "item": [
             {
-              "name": "getJobRolesDetailesById - 404",
+              "name": "getJobRolesDetailsById - 404",
               "request": {
                 "method": "GET",
                 "header": [],
