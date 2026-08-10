@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import prisma from "../../src/prismaClient";
 import { JobRoleService } from "../../src/services/JobRoleService";
 
-vi.mock("../src/prismaClient", () => ({
+vi.mock("../../src/prismaClient", () => ({
   default: {
     jobRole: {
       findMany: vi.fn(),
