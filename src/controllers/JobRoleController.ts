@@ -14,7 +14,7 @@ export class JobRoleController {
     }
   };
 
-  async getJobRoleById(req: Request, res: Response, next: NextFunction): Promise<void> {
+  getJobRoleById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const id = Number(req.params.id);
       const jobRoleDetails = await this.jobRoleService.getJobRoleById(id);
@@ -26,5 +26,5 @@ export class JobRoleController {
     } catch (error) {
       next(error);
     }
-  }
+  };
 }
