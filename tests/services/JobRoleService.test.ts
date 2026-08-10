@@ -19,7 +19,7 @@ describe("JobRoleService.findAll", () => {
     service = new JobRoleService(prisma as PrismaClient);
   });
 
-  it("should return mapped list of job roles", async () => {
+  it("should return list of job role payloads", async () => {
     const rows = [
       {
         roleName: "Front-End Engineer",
@@ -41,23 +41,7 @@ describe("JobRoleService.findAll", () => {
     const result = await service.findAll();
 
     expect(prisma.jobRole.findMany).toHaveBeenCalledTimes(1);
-
-    expect(result).toEqual([
-      {
-        roleName: "Front-End Engineer",
-        location: "Gdansk",
-        capability: "Engineering",
-        band: "Associate",
-        closingDate: "2026-08-31T00:00:00.000Z",
-      },
-      {
-        roleName: "Back-End Engineer",
-        location: "Gdansk",
-        capability: "Engineering",
-        band: "Associate",
-        closingDate: "2026-08-31T00:00:00.000Z",
-      },
-    ]);
+    expect(result).toEqual(rows);
   });
 
   it("should return empty list when prisma returns no rows", async () => {

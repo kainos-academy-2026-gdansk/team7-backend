@@ -30,7 +30,24 @@ describe("JobRoleController - getAll", () => {
   });
 
   it("should return 200 with mapped roles on success", async () => {
-    const mockRoles = [
+    const mockPayload = [
+      {
+        roleName: "Front-End Engineer",
+        location: "Gdansk",
+        closingDate: new Date("2026-08-31T00:00:00.000Z"),
+        band: { name: "Associate" },
+        capability: { name: "Engineering" },
+      },
+      {
+        roleName: "Back-End Engineer",
+        location: "Gdansk",
+        closingDate: new Date("2026-08-31T00:00:00.000Z"),
+        band: { name: "Associate" },
+        capability: { name: "Engineering" },
+      },
+    ];
+
+    const expectedResponse = [
       {
         roleName: "Front-End Engineer",
         location: "Gdansk",
@@ -47,13 +64,13 @@ describe("JobRoleController - getAll", () => {
       },
     ];
 
-    MockService.findAll = vi.fn().mockResolvedValue(mockRoles);
+    MockService.findAll = vi.fn().mockResolvedValue(mockPayload as any);
     const controller = new JobRoleController(MockService);
 
     await controller.getAll(mockReq, mockRes);
 
     expect(mockRes.status).toHaveBeenCalledWith(200);
-    expect(mockRes.json).toHaveBeenCalledWith(mockRoles);
+    expect(mockRes.json).toHaveBeenCalledWith(expectedResponse);
     expect(Logger.error).not.toHaveBeenCalled();
   });
 

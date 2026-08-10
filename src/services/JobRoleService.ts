@@ -1,6 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
-import type { JobRoleAllResponseDto } from "../Dto/JobRoleDto";
-import { JobRoleMapper } from "../mappers/JobRoleMapper";
+import type { JobRoleGetAllSelectPayload } from "../models/JobRole";
 
 export class JobRoleService {
   private prismaClient: PrismaClient;
@@ -9,8 +8,8 @@ export class JobRoleService {
     this.prismaClient = prismaClient;
   }
 
-  async findAll(): Promise<JobRoleAllResponseDto[]> {
-    const roles = await this.prismaClient.jobRole.findMany({
+  async findAll(): Promise<JobRoleGetAllSelectPayload[]> {
+    return await this.prismaClient.jobRole.findMany({
       select: {
         roleName: true,
         location: true,
@@ -27,7 +26,5 @@ export class JobRoleService {
         },
       },
     });
-
-    return roles.map(JobRoleMapper.toAllResponseDto);
   }
 }
