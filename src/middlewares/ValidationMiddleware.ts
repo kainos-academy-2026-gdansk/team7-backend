@@ -1,5 +1,5 @@
 import type { RequestHandler } from "express";
-import z, { type ZodSchema } from "zod";
+import { z, type ZodSchema } from "zod";
 
 export function validateParams(schema: ZodSchema): RequestHandler {
   return (req, res, next) => {
@@ -13,6 +13,9 @@ export function validateParams(schema: ZodSchema): RequestHandler {
       });
       return;
     }
+
+    // Apply any Zod transforms (e.g. string -> number)
+    req.params = result.data as any;
     next();
   };
 }
