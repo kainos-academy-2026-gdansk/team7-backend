@@ -27,4 +27,15 @@ export class JobRoleController {
       next(error);
     }
   };
+
+  addJobRole = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const body = req.body;
+      const newJobRole = await this.jobRoleService.createJobRole(body);
+
+      res.status(201).json(JobRoleMapper.toAddJobRoleResponseDto(newJobRole));
+    } catch (error) {
+      next(error);
+    }
+  };
 }

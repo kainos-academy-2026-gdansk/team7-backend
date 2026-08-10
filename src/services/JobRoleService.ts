@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
-import type { JobRoleGetAllSelectPayload } from "../models/JobRole";
+import type { AddJobRoleDto } from "../Dto/JobRoleDTO";
+import type { JobRoleGetAllSelectPayload, JobRoleWithRelations } from "../models/JobRole";
 import type { JobRoleDetailed } from "../models/JobRole";
 export class JobRoleService {
   private prismaClient: PrismaClient;
@@ -55,5 +56,26 @@ export class JobRoleService {
       status: jobRoleDetails.status,
       numberOfOpenPositions: jobRoleDetails.openPositions ?? 0,
     };
+  }
+
+  async createJobRole(data: AddJobRoleDto): Promise<JobRoleWithRelations> {
+    return await this.prismaClient.jobRole.create({
+      data: {
+        roleName: data.roleName,
+        location: data.location,
+        closingDate: data.closingDate,
+        status: data.status,
+        description: data.description,
+        responsibilities: data.responsibilities,
+        openPositions: data.openPositions,
+        sharePointLink: data.sharePointLink,
+        bandId: data.bandId,
+        capabilityId: data.capabilityId,
+      },
+      include: {
+        band: true,
+        capability: true,
+      },
+    });
   }
 }
