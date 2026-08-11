@@ -28,6 +28,7 @@ interface JobRoleDetailed {
   status: JobRoleStatus;
   numberOfOpenPositions: number;
 }
+
 export type { JobRoleDetailed };
 
 export type JobRoleWithRelations = Prisma.JobRoleGetPayload<{

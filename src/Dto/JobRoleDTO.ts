@@ -25,6 +25,24 @@ interface JobRoleDetailedDTO {
   status: JobRoleStatus;
   numberOfOpenPositions: number;
 }
+
+export const updateJobRoleSchema = z
+  .object({
+    jobRoleName: z.string().trim().min(1, "Role name is required").max(100),
+    location: z.string().trim().min(1, "Location is required").max(100),
+    status: JobRoleStatusSchema,
+    bandName: z.string().trim().min(1, "Band is required"),
+    capabilityName: z.string().trim().min(1, "Capability is required"),
+    description: z.string().trim().max(2000).nullable(),
+    responsibilities: z.string().trim().max(2000).nullable(),
+    sharePointLink: z.url("Must be a valid URL").nullable(),
+    openPositions: z.number().int().nonnegative().nullable(),
+    closingDate: z.iso.datetime("Must be an ISO 8601 date-time").nullable(),
+  })
+  .strict();
+
+export type UpdateJobRoleRequestDTO = z.infer<typeof updateJobRoleSchema>;
+
 export type { JobRoleDetailedDTO };
 
 export const AddJobRoleRequestSchema = z.object({

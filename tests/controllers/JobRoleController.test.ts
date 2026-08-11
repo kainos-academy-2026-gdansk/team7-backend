@@ -1,7 +1,10 @@
 import type { NextFunction, Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { AddJobRoleResponseDto } from "../../src/Dto/JobRoleDTO";
-import type { JobRoleDetailedDTO } from "../../src/Dto/JobRoleDTO";
+import type {
+  AddJobRoleResponseDto,
+  JobRoleDetailedDTO,
+  UpdateJobRoleRequestDTO,
+} from "../../src/Dto/JobRoleDTO";
 import { JobRoleController } from "../../src/controllers/JobRoleController";
 import type { JobRoleDetailed } from "../../src/models/JobRole";
 import type { JobRoleWithRelations } from "../../src/models/JobRole";
@@ -10,11 +13,13 @@ import type { JobRoleService } from "../../src/services/JobRoleService";
 const findAll = vi.fn();
 const getJobRoleById = vi.fn();
 const createJobRole = vi.fn();
+const updateJobRole = vi.fn();
 
 const jobRoleServiceMock = {
   findAll,
   getJobRoleById,
   createJobRole,
+  updateJobRole,
 } as unknown as JobRoleService;
 
 const jobRoleDetailedMock: JobRoleDetailed = {
@@ -109,6 +114,19 @@ const addJobRoleResponseDtoMock: AddJobRoleResponseDto = {
   openPositions: 2,
   sharePointLink: "https://example.com/role/10",
   closingDate: "2026-11-30T00:00:00.000Z",
+};
+
+const updateJobRoleDtoMock: UpdateJobRoleRequestDTO = {
+  jobRoleName: "Software Engineer",
+  location: "Gdansk",
+  status: "OPEN",
+  bandName: "Senior Associate",
+  capabilityName: "Engineering",
+  description: "Builds things",
+  responsibilities: "Writes code",
+  sharePointLink: "https://example.com/role/1",
+  openPositions: 3,
+  closingDate: "2026-12-31T00:00:00.000Z",
 };
 
 describe("JobRoleController", () => {
@@ -253,6 +271,65 @@ describe("JobRoleController", () => {
       createJobRole.mockRejectedValue(error);
 
       await jobRoleController.addJobRole(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(error);
+      expect(status).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("updateJobRole", () => {
+    beforeEach(() => {
+      req = { params: { id: "1" }, body: updateJobRoleDtoMock } as unknown as Request;
+    });
+
+    it("responds with 200 and the mapped dto when the update succeeds", async () => {
+      updateJobRole.mockResolvedValue(jobRoleDetailedMock);
+
+      await jobRoleController.updateJobRole(req, res, next);
+
+      expect(status).toHaveBeenCalledWith(200);
+      expect(json).toHaveBeenCalledWith(jobRoleDetailedDtoMock);
+    });
+
+    it("calls the service with the parsed id and the validated body", async () => {
+      updateJobRole.mockResolvedValue(jobRoleDetailedMock);
+
+      await jobRoleController.updateJobRole(req, res, next);
+
+      expect(updateJobRole).toHaveBeenCalledWith(1, updateJobRoleDtoMock);
+    });
+
+    it("passes nullable fields through as null", async () => {
+      const bodyWithNulls: UpdateJobRoleRequestDTO = {
+        ...updateJobRoleDtoMock,
+        description: null,
+        responsibilities: null,
+        sharePointLink: null,
+        openPositions: null,
+        closingDate: null,
+      };
+      req = { params: { id: "1" }, body: bodyWithNulls } as unknown as Request;
+      updateJobRole.mockResolvedValue(jobRoleDetailedMock);
+
+      await jobRoleController.updateJobRole(req, res, next);
+
+      expect(updateJobRole).toHaveBeenCalledWith(1, bodyWithNulls);
+    });
+
+    it("responds with 404 when the service returns null", async () => {
+      updateJobRole.mockResolvedValue(null);
+
+      await jobRoleController.updateJobRole(req, res, next);
+
+      expect(status).toHaveBeenCalledWith(404);
+      expect(json).toHaveBeenCalledWith({ message: "Job role not found" });
+    });
+
+    it("forwards errors to next when the service throws", async () => {
+      const error = new Error("Service error");
+      updateJobRole.mockRejectedValue(error);
+
+      await jobRoleController.updateJobRole(req, res, next);
 
       expect(next).toHaveBeenCalledWith(error);
       expect(status).not.toHaveBeenCalled();
