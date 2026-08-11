@@ -409,12 +409,23 @@ describe("PUT /api/job-roles/:id", () => {
     );
   });
 
-  // TODO: powinno byc 400 - brak typowanych bledow sprawia, ze P2025 z Prismy konczy sie jako 500
-  it("returns 500 when the band name does not exist", async () => {
+  it("returns 400 when the band name does not exist", async () => {
     const response = await request(app)
       .put(`/api/job-roles/${editableJobRoleId}`)
       .send({ ...validBody, bandName: "Nonexistent Band" });
 
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(400);
+    expect(response.body.errors).toContainEqual(expect.objectContaining({ field: "bandName" }));
+  });
+
+  it("returns 400 when the capability name does not exist", async () => {
+    const response = await request(app)
+      .put(`/api/job-roles/${editableJobRoleId}`)
+      .send({ ...validBody, capabilityName: "Nonexistent Capability" });
+
+    expect(response.status).toBe(400);
+    expect(response.body.errors).toContainEqual(
+      expect.objectContaining({ field: "capabilityName" }),
+    );
   });
 });

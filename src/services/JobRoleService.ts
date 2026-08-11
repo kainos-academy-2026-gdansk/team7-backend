@@ -1,6 +1,6 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
-import type { AddJobRoleDto } from "../Dto/JobRoleDTO";
-import type { UpdateJobRoleRequestDTO } from "../Dto/JobRoleDTO";
+import { ZodError, type ZodIssue } from "zod";
+import type { AddJobRoleDto, UpdateJobRoleRequestDTO } from "../Dto/JobRoleDTO";
 import type { JobRoleGetAllSelectPayload, JobRoleWithRelations } from "../models/JobRole";
 import type { JobRoleDetailed } from "../models/JobRole";
 
@@ -57,6 +57,8 @@ export class JobRoleService {
       return null;
     }
 
+    await this.assertRelationsExist(data);
+
     const updated = await this.prismaClient.jobRole.update({
       where: { id },
       data: {
@@ -78,6 +80,38 @@ export class JobRoleService {
     });
 
     return JobRoleService.toDetailed(updated);
+  }
+
+  private async assertRelationsExist(data: UpdateJobRoleRequestDTO): Promise<void> {
+    const [band, capability] = await Promise.all([
+      this.prismaClient.band.findUnique({ where: { name: data.bandName }, select: { id: true } }),
+      this.prismaClient.capability.findUnique({
+        where: { name: data.capabilityName },
+        select: { id: true },
+      }),
+    ]);
+
+    const issues: ZodIssue[] = [];
+    if (!band) {
+      issues.push({
+        code: "custom",
+        path: ["bandName"],
+        message: `Band "${data.bandName}" does not exist`,
+        input: data.bandName,
+      });
+    }
+    if (!capability) {
+      issues.push({
+        code: "custom",
+        path: ["capabilityName"],
+        message: `Capability "${data.capabilityName}" does not exist`,
+        input: data.capabilityName,
+      });
+    }
+
+    if (issues.length > 0) {
+      throw new ZodError(issues);
+    }
   }
 
   private static toDetailed(

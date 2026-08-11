@@ -1,5 +1,6 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ZodError } from "zod";
 import type { AddJobRoleDto, UpdateJobRoleRequestDTO } from "../../src/Dto/JobRoleDTO";
 import type { JobRoleDetailed } from "../../src/models/JobRole";
 import { JobRoleService } from "../../src/services/JobRoleService";
@@ -8,9 +9,13 @@ const findUnique = vi.fn();
 const findMany = vi.fn();
 const create = vi.fn();
 const update = vi.fn();
+const bandFindUnique = vi.fn();
+const capabilityFindUnique = vi.fn();
 
 const dbMock = {
   jobRole: { findUnique, findMany, create, update },
+  band: { findUnique: bandFindUnique },
+  capability: { findUnique: capabilityFindUnique },
 } as unknown as PrismaClient;
 
 type JobRoleWithRelations = Prisma.JobRoleGetPayload<{
@@ -273,6 +278,11 @@ describe("JobRoleService", () => {
   });
 
   describe("updateJobRole", () => {
+    beforeEach(() => {
+      bandFindUnique.mockResolvedValue({ id: 2 });
+      capabilityFindUnique.mockResolvedValue({ id: 5 });
+    });
+
     it("returns the mapped job role when the update succeeds", async () => {
       findUnique.mockResolvedValue({ id: 1 });
       update.mockResolvedValue(jobRoleRecordMock);
@@ -364,6 +374,21 @@ describe("JobRoleService", () => {
       await expect(jobRoleService.updateJobRole(1, updateJobRoleDtoMock)).rejects.toThrow(
         "db down",
       );
+    });
+
+    it("throws a ZodError with per-field issues when the relations do not exist", async () => {
+      findUnique.mockResolvedValue({ id: 1 });
+      bandFindUnique.mockResolvedValue(null);
+      capabilityFindUnique.mockResolvedValue(null);
+
+      const error = await jobRoleService.updateJobRole(1, updateJobRoleDtoMock).catch((e) => e);
+
+      expect(error).toBeInstanceOf(ZodError);
+      expect(error.issues.map((issue: { path: PropertyKey[] }) => issue.path)).toEqual([
+        ["bandName"],
+        ["capabilityName"],
+      ]);
+      expect(update).not.toHaveBeenCalled();
     });
   });
 });
