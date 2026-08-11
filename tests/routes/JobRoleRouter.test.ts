@@ -92,44 +92,6 @@ describe("GET /api/job-roles", () => {
   });
 });
 
-describe("GET /api/job-roles/bands", () => {
-  it("returns 200 with available bands", async () => {
-    const response = await request(app).get("/api/job-roles/bands");
-
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual([{ id: seededBandId, name: "Senior Associate" }]);
-  });
-
-  it("returns 500 when the database query fails", async () => {
-    vi.spyOn(prisma.band, "findMany").mockRejectedValueOnce(new Error("Bands query failed"));
-
-    const response = await request(app).get("/api/job-roles/bands");
-
-    expect(response.status).toBe(500);
-    expect(response.body).toEqual({ message: "Bands query failed" });
-  });
-});
-
-describe("GET /api/job-roles/capabilities", () => {
-  it("returns 200 with available capabilities", async () => {
-    const response = await request(app).get("/api/job-roles/capabilities");
-
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual([{ id: seededCapabilityId, name: "Engineering" }]);
-  });
-
-  it("returns 500 when the database query fails", async () => {
-    vi.spyOn(prisma.capability, "findMany").mockRejectedValueOnce(
-      new Error("Capabilities query failed"),
-    );
-
-    const response = await request(app).get("/api/job-roles/capabilities");
-
-    expect(response.status).toBe(500);
-    expect(response.body).toEqual({ message: "Capabilities query failed" });
-  });
-});
-
 describe("GET /api/job-roles/:id", () => {
   it("returns 200 with the flattened job role dto", async () => {
     const response = await request(app).get(`/api/job-roles/${seededJobRoleId}`);

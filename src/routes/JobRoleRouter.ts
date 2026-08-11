@@ -11,8 +11,6 @@ const jobRoleService = new JobRoleService(prisma);
 const jobRoleController = new JobRoleController(jobRoleService);
 
 router.get("/", jobRoleController.getAll);
-router.get("/bands", jobRoleController.getBands);
-router.get("/capabilities", jobRoleController.getCapabilities);
 router.get("/:id", validateParams(idParamSchema), (req, res, next) =>
   jobRoleController.getJobRoleById(req, res, next),
 );

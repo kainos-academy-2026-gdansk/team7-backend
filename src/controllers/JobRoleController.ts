@@ -5,24 +5,6 @@ import type { JobRoleService } from "../services/JobRoleService";
 export class JobRoleController {
   constructor(private readonly jobRoleService: JobRoleService) {}
 
-  getBands = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const bands = await this.jobRoleService.findAllBands();
-      res.status(200).json(bands);
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  getCapabilities = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const capabilities = await this.jobRoleService.findAllCapabilities();
-      res.status(200).json(capabilities);
-    } catch (error) {
-      next(error);
-    }
-  };
-
   getAll = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const roles = await this.jobRoleService.findAll();

@@ -79,28 +79,4 @@ export class JobRoleService {
       },
     });
   }
-
-  async findAllBands(): Promise<Array<{ id: number; name: string }>> {
-    return await this.prismaClient.band.findMany({
-      select: {
-        id: true,
-        name: true,
-      },
-      orderBy: {
-        id: "asc",
-      },
-    });
-  }
-
-  async findAllCapabilities(): Promise<Array<{ id: number; name: string }>> {
-    return await this.prismaClient.capability.findMany({
-      select: {
-        id: true,
-        name: true,
-      },
-      orderBy: {
-        id: "asc",
-      },
-    });
-  }
 }

@@ -8,15 +8,11 @@ import type { JobRoleWithRelations } from "../../src/models/JobRole";
 import type { JobRoleService } from "../../src/services/JobRoleService";
 
 const findAll = vi.fn();
-const findAllBands = vi.fn();
-const findAllCapabilities = vi.fn();
 const getJobRoleById = vi.fn();
 const createJobRole = vi.fn();
 
 const jobRoleServiceMock = {
   findAll,
-  findAllBands,
-  findAllCapabilities,
   getJobRoleById,
   createJobRole,
 } as unknown as JobRoleService;
@@ -81,16 +77,6 @@ const jobRoleListDtoMock = [
     band: "Associate",
     closingDate: null,
   },
-];
-
-const bandsMock = [
-  { id: 1, name: "Apprentice" },
-  { id: 2, name: "Trainee" },
-];
-
-const capabilitiesMock = [
-  { id: 1, name: "Innovation" },
-  { id: 2, name: "Engineering" },
 ];
 
 const createdJobRoleRecordMock: JobRoleWithRelations = {
@@ -205,48 +191,6 @@ describe("JobRoleController", () => {
       findAll.mockRejectedValue(error);
 
       await jobRoleController.getAll(req, res, next);
-
-      expect(next).toHaveBeenCalledWith(error);
-      expect(status).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("getBands", () => {
-    it("responds with 200 and all bands", async () => {
-      findAllBands.mockResolvedValue(bandsMock);
-
-      await jobRoleController.getBands(req, res, next);
-
-      expect(status).toHaveBeenCalledWith(200);
-      expect(json).toHaveBeenCalledWith(bandsMock);
-    });
-
-    it("forwards errors to next when the service throws", async () => {
-      const error = new Error("bands query failed");
-      findAllBands.mockRejectedValue(error);
-
-      await jobRoleController.getBands(req, res, next);
-
-      expect(next).toHaveBeenCalledWith(error);
-      expect(status).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("getCapabilities", () => {
-    it("responds with 200 and all capabilities", async () => {
-      findAllCapabilities.mockResolvedValue(capabilitiesMock);
-
-      await jobRoleController.getCapabilities(req, res, next);
-
-      expect(status).toHaveBeenCalledWith(200);
-      expect(json).toHaveBeenCalledWith(capabilitiesMock);
-    });
-
-    it("forwards errors to next when the service throws", async () => {
-      const error = new Error("capabilities query failed");
-      findAllCapabilities.mockRejectedValue(error);
-
-      await jobRoleController.getCapabilities(req, res, next);
 
       expect(next).toHaveBeenCalledWith(error);
       expect(status).not.toHaveBeenCalled();

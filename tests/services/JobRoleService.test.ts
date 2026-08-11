@@ -7,13 +7,9 @@ import { JobRoleService } from "../../src/services/JobRoleService";
 const findUnique = vi.fn();
 const findMany = vi.fn();
 const create = vi.fn();
-const bandFindMany = vi.fn();
-const capabilityFindMany = vi.fn();
 
 const dbMock = {
   jobRole: { findUnique, findMany, create },
-  band: { findMany: bandFindMany },
-  capability: { findMany: capabilityFindMany },
 } as unknown as PrismaClient;
 
 type JobRoleWithRelations = Prisma.JobRoleGetPayload<{
@@ -99,16 +95,6 @@ const createdJobRoleRecordMock: JobRoleWithRelations = {
   createdAt: new Date("2026-01-03T00:00:00.000Z"),
   updatedAt: new Date("2026-01-03T00:00:00.000Z"),
 };
-
-const bandsMock = [
-  { id: 1, name: "Apprentice" },
-  { id: 2, name: "Trainee" },
-];
-
-const capabilitiesMock = [
-  { id: 1, name: "Innovation" },
-  { id: 2, name: "Engineering" },
-];
 
 describe("JobRoleService", () => {
   let jobRoleService: JobRoleService;
@@ -290,48 +276,6 @@ describe("JobRoleService", () => {
 
       await expect(jobRoleService.createJobRole(addJobRoleDtoMock)).rejects.toThrow(
         "insert failed",
-      );
-    });
-  });
-
-  describe("findAllBands", () => {
-    it("returns all bands", async () => {
-      bandFindMany.mockResolvedValue(bandsMock);
-
-      const result = await jobRoleService.findAllBands();
-
-      expect(result).toEqual(bandsMock);
-      expect(bandFindMany).toHaveBeenCalledWith({
-        select: { id: true, name: true },
-        orderBy: { id: "asc" },
-      });
-    });
-
-    it("rejects when prisma band query fails", async () => {
-      bandFindMany.mockRejectedValue(new Error("bands query failed"));
-
-      await expect(jobRoleService.findAllBands()).rejects.toThrow("bands query failed");
-    });
-  });
-
-  describe("findAllCapabilities", () => {
-    it("returns all capabilities", async () => {
-      capabilityFindMany.mockResolvedValue(capabilitiesMock);
-
-      const result = await jobRoleService.findAllCapabilities();
-
-      expect(result).toEqual(capabilitiesMock);
-      expect(capabilityFindMany).toHaveBeenCalledWith({
-        select: { id: true, name: true },
-        orderBy: { id: "asc" },
-      });
-    });
-
-    it("rejects when prisma capability query fails", async () => {
-      capabilityFindMany.mockRejectedValue(new Error("capabilities query failed"));
-
-      await expect(jobRoleService.findAllCapabilities()).rejects.toThrow(
-        "capabilities query failed",
       );
     });
   });
