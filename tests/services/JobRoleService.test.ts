@@ -1,13 +1,15 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { AddJobRoleDto } from "../../src/Dto/JobRoleDTO";
 import type { JobRoleDetailed } from "../../src/models/JobRole";
 import { JobRoleService } from "../../src/services/JobRoleService";
 
 const findUnique = vi.fn();
 const findMany = vi.fn();
+const create = vi.fn();
 
 const dbMock = {
-  jobRole: { findUnique, findMany },
+  jobRole: { findUnique, findMany, create },
 } as unknown as PrismaClient;
 
 type JobRoleWithRelations = Prisma.JobRoleGetPayload<{
@@ -62,6 +64,36 @@ const jobRoleListMock = [
     capability: { name: "Engineering" },
   },
 ];
+
+const addJobRoleDtoMock: AddJobRoleDto = {
+  roleName: "Data Engineer",
+  location: "Warsaw",
+  bandId: 2,
+  capabilityId: 5,
+  description: "Builds data pipelines",
+  responsibilities: "Designs ETL jobs",
+  openPositions: 2,
+  sharePointLink: "https://example.com/role/2",
+  closingDate: new Date("2026-11-30T00:00:00.000Z"),
+};
+
+const createdJobRoleRecordMock: JobRoleWithRelations = {
+  id: 2,
+  roleName: "Data Engineer",
+  location: "Warsaw",
+  closingDate: new Date("2026-11-30T00:00:00.000Z"),
+  status: "OPEN",
+  description: "Builds data pipelines",
+  responsibilities: "Designs ETL jobs",
+  openPositions: 2,
+  sharePointLink: "https://example.com/role/2",
+  bandId: 2,
+  capabilityId: 5,
+  band: { id: 2, name: "Senior Associate" },
+  capability: { id: 5, name: "Engineering" },
+  createdAt: new Date("2026-01-03T00:00:00.000Z"),
+  updatedAt: new Date("2026-01-03T00:00:00.000Z"),
+};
 
 describe("JobRoleService", () => {
   let jobRoleService: JobRoleService;
@@ -137,6 +169,92 @@ describe("JobRoleService", () => {
       findMany.mockRejectedValue(new Error("db down"));
 
       await expect(jobRoleService.findAll()).rejects.toThrow("db down");
+    });
+  });
+
+  describe("createJobRole", () => {
+    it("creates a job role and returns it with relations", async () => {
+      create.mockResolvedValue(createdJobRoleRecordMock);
+
+      const result = await jobRoleService.createJobRole(addJobRoleDtoMock);
+
+      expect(result).toEqual(createdJobRoleRecordMock);
+    });
+
+    it("calls prisma create with mapped input and included relations", async () => {
+      create.mockResolvedValue(createdJobRoleRecordMock);
+
+      await jobRoleService.createJobRole(addJobRoleDtoMock);
+
+      expect(create).toHaveBeenCalledWith({
+        data: {
+          roleName: "Data Engineer",
+          location: "Warsaw",
+          closingDate: new Date("2026-11-30T00:00:00.000Z"),
+          status: "OPEN",
+          description: "Builds data pipelines",
+          responsibilities: "Designs ETL jobs",
+          openPositions: 2,
+          sharePointLink: "https://example.com/role/2",
+          bandId: 2,
+          capabilityId: 5,
+        },
+        include: {
+          band: true,
+          capability: true,
+        },
+      });
+    });
+
+    it("passes null/undefined optional fields through to prisma", async () => {
+      create.mockResolvedValue({
+        ...createdJobRoleRecordMock,
+        id: 3,
+        description: null,
+        responsibilities: null,
+        openPositions: null,
+        sharePointLink: null,
+        closingDate: null,
+      });
+
+      await jobRoleService.createJobRole({
+        roleName: "Platform Engineer",
+        location: "Remote",
+        bandId: 2,
+        capabilityId: 5,
+        description: null,
+        responsibilities: null,
+        openPositions: null,
+        sharePointLink: null,
+        closingDate: null,
+      });
+
+      expect(create).toHaveBeenCalledWith({
+        data: {
+          roleName: "Platform Engineer",
+          location: "Remote",
+          closingDate: null,
+          status: "OPEN",
+          description: null,
+          responsibilities: null,
+          openPositions: null,
+          sharePointLink: null,
+          bandId: 2,
+          capabilityId: 5,
+        },
+        include: {
+          band: true,
+          capability: true,
+        },
+      });
+    });
+
+    it("rejects when prisma create fails", async () => {
+      create.mockRejectedValue(new Error("insert failed"));
+
+      await expect(jobRoleService.createJobRole(addJobRoleDtoMock)).rejects.toThrow(
+        "insert failed",
+      );
     });
   });
 });

@@ -1,4 +1,9 @@
-import type { JobRoleAllResponseDto, JobRoleDetailedDTO } from "../Dto/JobRoleDTO";
+import type { Band, Capability, JobRole } from "@prisma/client";
+import type {
+  AddJobRoleResponseDto,
+  JobRoleAllResponseDto,
+  JobRoleDetailedDTO,
+} from "../Dto/JobRoleDTO";
 import type { JobRoleGetAllSelectPayload } from "../models/JobRole";
 import type { JobRoleDetailed } from "../models/JobRole";
 export class JobRoleMapper {
@@ -27,6 +32,24 @@ export class JobRoleMapper {
       closingDate: jobRoleDetailed.closingDate ? jobRoleDetailed.closingDate.toISOString() : null,
       status: jobRoleDetailed.status,
       numberOfOpenPositions: jobRoleDetailed.numberOfOpenPositions,
+    };
+  }
+
+  static toAddJobRoleResponseDto(
+    role: JobRole & { band: Band; capability: Capability },
+  ): AddJobRoleResponseDto {
+    return {
+      id: role.id,
+      roleName: role.roleName,
+      location: role.location,
+      status: role.status,
+      band: role.band.name,
+      capability: role.capability.name,
+      description: role.description,
+      responsibilities: role.responsibilities,
+      openPositions: role.openPositions,
+      sharePointLink: role.sharePointLink,
+      closingDate: role.closingDate ? role.closingDate.toISOString() : null,
     };
   }
 }

@@ -11,6 +11,8 @@ let container: StartedPostgreSqlContainer;
 let prisma: PrismaClient;
 let app: Express.Application;
 let seededJobRoleId: number;
+let seededBandId: number;
+let seededCapabilityId: number;
 
 beforeAll(async () => {
   container = await new PostgreSqlContainer("postgres:16-alpine").start();
@@ -24,6 +26,8 @@ beforeAll(async () => {
 
   const band = await prisma.band.create({ data: { name: "Senior Associate" } });
   const capability = await prisma.capability.create({ data: { name: "Engineering" } });
+  seededBandId = band.id;
+  seededCapabilityId = capability.id;
   const jobRole = await prisma.jobRole.create({
     data: {
       roleName: "Software Engineer",
@@ -33,8 +37,8 @@ beforeAll(async () => {
       responsibilities: "Writes code",
       openPositions: 3,
       sharePointLink: "https://example.com/role/1",
-      bandId: band.id,
-      capabilityId: capability.id,
+      bandId: seededBandId,
+      capabilityId: seededCapabilityId,
     },
   });
 
@@ -122,5 +126,135 @@ describe("GET /api/job-roles/:id", () => {
     expect(response.body.errors).toEqual([
       { field: "id", message: "Id must be a positive integer" },
     ]);
+  });
+});
+
+describe("POST /api/job-roles", () => {
+  it("returns 201 with created role dto for a valid payload", async () => {
+    const response = await request(app).post("/api/job-roles").send({
+      roleName: "Data Engineer",
+      location: "Warsaw",
+      bandId: seededBandId,
+      capabilityId: seededCapabilityId,
+      description: "Builds data pipelines",
+      responsibilities: "Designs ETL jobs",
+      openPositions: 2,
+      sharePointLink: "https://example.com/role/new",
+      closingDate: "2026-11-30T00:00:00.000Z",
+    });
+
+    expect(response.status).toBe(201);
+    expect(response.body).toMatchObject({
+      roleName: "Data Engineer",
+      location: "Warsaw",
+      status: "OPEN",
+      band: "Senior Associate",
+      capability: "Engineering",
+      description: "Builds data pipelines",
+      responsibilities: "Designs ETL jobs",
+      openPositions: 2,
+      sharePointLink: "https://example.com/role/new",
+      closingDate: "2026-11-30T00:00:00.000Z",
+    });
+    expect(typeof response.body.id).toBe("number");
+
+    await prisma.jobRole.delete({ where: { id: response.body.id } });
+  });
+
+  it("returns 201 when nullable optional fields are null and openPositions is 0", async () => {
+    const response = await request(app).post("/api/job-roles").send({
+      roleName: "Platform Engineer",
+      location: "Remote",
+      bandId: seededBandId,
+      capabilityId: seededCapabilityId,
+      description: null,
+      responsibilities: null,
+      openPositions: 0,
+      sharePointLink: null,
+      closingDate: null,
+    });
+
+    expect(response.status).toBe(201);
+    expect(response.body).toMatchObject({
+      roleName: "Platform Engineer",
+      location: "Remote",
+      status: "OPEN",
+      band: "Senior Associate",
+      capability: "Engineering",
+      description: null,
+      responsibilities: null,
+      openPositions: 0,
+      sharePointLink: null,
+      closingDate: null,
+    });
+
+    await prisma.jobRole.delete({ where: { id: response.body.id } });
+  });
+
+  it("returns 400 when a required field is missing", async () => {
+    const response = await request(app).post("/api/job-roles").send({
+      location: "Warsaw",
+      bandId: seededBandId,
+      capabilityId: seededCapabilityId,
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body.errors).toContainEqual({
+      field: "roleName",
+      message: "Invalid input: expected string, received undefined",
+    });
+  });
+
+  it("returns 201 and persists OPEN even when CLOSED is sent", async () => {
+    const response = await request(app).post("/api/job-roles").send({
+      roleName: "Integration Engineer",
+      location: "Warsaw",
+      status: "CLOSED",
+      bandId: seededBandId,
+      capabilityId: seededCapabilityId,
+    });
+
+    expect(response.status).toBe(201);
+    expect(response.body).toMatchObject({
+      roleName: "Integration Engineer",
+      status: "OPEN",
+      band: "Senior Associate",
+      capability: "Engineering",
+    });
+
+    const created = await prisma.jobRole.findUnique({ where: { id: response.body.id } });
+    expect(created?.status).toBe("OPEN");
+
+    await prisma.jobRole.delete({ where: { id: response.body.id } });
+  });
+
+  it("returns 400 when closingDate is not a valid datetime", async () => {
+    const response = await request(app).post("/api/job-roles").send({
+      roleName: "QA Engineer",
+      location: "Krakow",
+      bandId: seededBandId,
+      capabilityId: seededCapabilityId,
+      closingDate: "31-12-2026",
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body.errors).toContainEqual({
+      field: "closingDate",
+      message: "Invalid ISO datetime",
+    });
+  });
+
+  it("returns 500 when database insert fails", async () => {
+    vi.spyOn(prisma.jobRole, "create").mockRejectedValueOnce(new Error("Insert failed"));
+
+    const response = await request(app).post("/api/job-roles").send({
+      roleName: "Data Engineer",
+      location: "Warsaw",
+      bandId: seededBandId,
+      capabilityId: seededCapabilityId,
+    });
+
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual({ message: "Insert failed" });
   });
 });
