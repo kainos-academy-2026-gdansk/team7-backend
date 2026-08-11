@@ -2,6 +2,7 @@ import type { PrismaClient } from "@prisma/client";
 import type { AddJobRoleDto } from "../Dto/JobRoleDTO";
 import type { JobRoleGetAllSelectPayload, JobRoleWithRelations } from "../models/JobRole";
 import type { JobRoleDetailed } from "../models/JobRole";
+
 export class JobRoleService {
   private prismaClient: PrismaClient;
 
@@ -64,7 +65,7 @@ export class JobRoleService {
         roleName: data.roleName,
         location: data.location,
         closingDate: data.closingDate,
-        status: data.status,
+        status: "OPEN",
         description: data.description,
         responsibilities: data.responsibilities,
         openPositions: data.openPositions,
@@ -75,6 +76,30 @@ export class JobRoleService {
       include: {
         band: true,
         capability: true,
+      },
+    });
+  }
+
+  async findAllBands(): Promise<Array<{ id: number; name: string }>> {
+    return await this.prismaClient.band.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+      orderBy: {
+        id: "asc",
+      },
+    });
+  }
+
+  async findAllCapabilities(): Promise<Array<{ id: number; name: string }>> {
+    return await this.prismaClient.capability.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+      orderBy: {
+        id: "asc",
       },
     });
   }
