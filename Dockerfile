@@ -6,16 +6,22 @@ FROM node:22-alpine AS base
 RUN apk add --no-cache openssl ca-certificates
 WORKDIR /app
 
-# Filename contains a space, so COPY needs the JSON form
-COPY ["KAINOS-ZSCALER G2_2027.p7b", "/tmp/zscaler.p7b"]
+# The cert is gitignored, so it is absent in CI. package.json is a dummy
+# always-present source: COPY fails if every source glob matches nothing.
+COPY ["package.json", "KAINOS-ZSCALER*.p7b", "/tmp/certs/"]
 
-# 1. p7b -> full-chain PEM (DER first, fall back to a PEM-encoded p7b)
+# p7b -> full-chain PEM, only when the cert is actually present
 RUN mkdir -p /usr/local/share/certs \
-    && (openssl pkcs7 -inform DER -in /tmp/zscaler.p7b -print_certs -out /usr/local/share/certs/zscaler-chain.pem \
-        || openssl pkcs7 -inform PEM -in /tmp/zscaler.p7b -print_certs -out /usr/local/share/certs/zscaler-chain.pem) \
-    && cp /usr/local/share/certs/zscaler-chain.pem /usr/local/share/ca-certificates/zscaler-chain.crt \
-    && update-ca-certificates \
-    && rm /tmp/zscaler.p7b
+    && : > /usr/local/share/certs/zscaler-chain.pem \
+    && : > /usr/local/share/ca-certificates/zscaler-chain.crt \
+    && for f in /tmp/certs/*.p7b; do \
+         [ -e "$f" ] || continue; \
+         openssl pkcs7 -inform DER -in "$f" -print_certs -out /usr/local/share/certs/zscaler-chain.pem \
+           || openssl pkcs7 -inform PEM -in "$f" -print_certs -out /usr/local/share/certs/zscaler-chain.pem; \
+         cp /usr/local/share/certs/zscaler-chain.pem /usr/local/share/ca-certificates/zscaler-chain.crt; \
+         update-ca-certificates; \
+       done \
+    && rm -rf /tmp/certs
 
 # Do NOT set npm's `cafile`: it replaces the whole CA bundle, breaking the
 # npm endpoints Zscaler does not intercept. NODE_EXTRA_CA_CERTS appends instead.
