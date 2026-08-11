@@ -14,6 +14,7 @@ export class JobRoleService {
   async findAll(): Promise<JobRoleGetAllSelectPayload[]> {
     return await this.prismaClient.jobRole.findMany({
       select: {
+        id: true,
         roleName: true,
         location: true,
         closingDate: true,
@@ -151,5 +152,16 @@ export class JobRoleService {
         capability: true,
       },
     });
+  }
+
+  async deleteJobRole(id: number): Promise<boolean> {
+    const jobRole = await this.prismaClient.jobRole.findUnique({ where: { id } });
+
+    if (!jobRole) {
+      return false;
+    }
+
+    await this.prismaClient.jobRole.delete({ where: { id } });
+    return true;
   }
 }

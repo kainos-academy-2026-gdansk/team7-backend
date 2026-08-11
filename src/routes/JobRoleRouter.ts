@@ -21,5 +21,8 @@ router.put(
   validateBody(updateJobRoleSchema),
   jobRoleController.updateJobRole,
 );
+router.delete("/:id", validateParams(idParamSchema), (req, res, next) =>
+  jobRoleController.deleteJobRole(req, res, next),
+);
 
 export default router;
