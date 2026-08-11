@@ -1,5 +1,6 @@
-import type { PrismaClient } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import type { AddJobRoleDto } from "../Dto/JobRoleDTO";
+import type { UpdateJobRoleRequestDTO } from "../Dto/JobRoleDTO";
 import type { JobRoleGetAllSelectPayload, JobRoleWithRelations } from "../models/JobRole";
 import type { JobRoleDetailed } from "../models/JobRole";
 
@@ -44,18 +45,56 @@ export class JobRoleService {
       return null;
     }
 
+    return JobRoleService.toDetailed(jobRoleDetails);
+  }
+
+  async updateJobRole(id: number, data: UpdateJobRoleRequestDTO): Promise<JobRoleDetailed | null> {
+    const exists = await this.prismaClient.jobRole.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+    if (!exists) {
+      return null;
+    }
+
+    const updated = await this.prismaClient.jobRole.update({
+      where: { id },
+      data: {
+        roleName: data.jobRoleName,
+        location: data.location,
+        status: data.status,
+        description: data.description,
+        responsibilities: data.responsibilities,
+        sharePointLink: data.sharePointLink,
+        openPositions: data.openPositions,
+        closingDate: data.closingDate,
+        band: { connect: { name: data.bandName } },
+        capability: { connect: { name: data.capabilityName } },
+      },
+      include: {
+        band: true,
+        capability: true,
+      },
+    });
+
+    return JobRoleService.toDetailed(updated);
+  }
+
+  private static toDetailed(
+    entity: Prisma.JobRoleGetPayload<{ include: { band: true; capability: true } }>,
+  ): JobRoleDetailed {
     return {
-      id: jobRoleDetails.id,
-      jobRoleName: jobRoleDetails.roleName,
-      description: jobRoleDetails.description,
-      responsibilities: jobRoleDetails.responsibilities ?? "",
-      link: jobRoleDetails.sharePointLink,
-      location: jobRoleDetails.location,
-      capability: jobRoleDetails.capability,
-      band: jobRoleDetails.band,
-      closingDate: jobRoleDetails.closingDate,
-      status: jobRoleDetails.status,
-      numberOfOpenPositions: jobRoleDetails.openPositions ?? 0,
+      id: entity.id,
+      jobRoleName: entity.roleName,
+      description: entity.description,
+      responsibilities: entity.responsibilities ?? "",
+      link: entity.sharePointLink,
+      location: entity.location,
+      capability: entity.capability,
+      band: entity.band,
+      closingDate: entity.closingDate,
+      status: entity.status,
+      numberOfOpenPositions: entity.openPositions ?? 0,
     };
   }
 

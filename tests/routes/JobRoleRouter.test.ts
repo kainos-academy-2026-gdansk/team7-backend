@@ -258,3 +258,163 @@ describe("POST /api/job-roles", () => {
     expect(response.body).toEqual({ message: "Insert failed" });
   });
 });
+
+describe("PUT /api/job-roles/:id", () => {
+  let editableJobRoleId: number;
+
+  const validBody = {
+    jobRoleName: "Lead Software Engineer",
+    location: "Belfast",
+    status: "CLOSED",
+    bandName: "Consultant",
+    capabilityName: "Testing",
+    description: "Leads delivery teams.",
+    responsibilities: "Owns technical direction.",
+    sharePointLink: "https://example.com/role/updated",
+    openPositions: 7,
+    closingDate: "2027-01-31T23:59:59.000Z",
+  };
+
+  // osobny rekord, zeby PUT nie modyfikowal roli uzywanej przez testy GET
+  beforeAll(async () => {
+    await prisma.band.create({ data: { name: "Consultant" } });
+    await prisma.capability.create({ data: { name: "Testing" } });
+
+    const band = await prisma.band.findUniqueOrThrow({ where: { name: "Senior Associate" } });
+    const capability = await prisma.capability.findUniqueOrThrow({
+      where: { name: "Engineering" },
+    });
+    const jobRole = await prisma.jobRole.create({
+      data: {
+        roleName: "Editable Role",
+        location: "Gdansk",
+        status: "OPEN",
+        description: "Before update",
+        responsibilities: "Before update",
+        openPositions: 1,
+        sharePointLink: "https://example.com/role/before",
+        bandId: band.id,
+        capabilityId: capability.id,
+      },
+    });
+
+    editableJobRoleId = jobRole.id;
+  });
+
+  it("returns 200 with the updated dto and persists the change", async () => {
+    const response = await request(app).put(`/api/job-roles/${editableJobRoleId}`).send(validBody);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      id: editableJobRoleId,
+      jobRoleName: "Lead Software Engineer",
+      description: "Leads delivery teams.",
+      responsibilities: "Owns technical direction.",
+      link: "https://example.com/role/updated",
+      location: "Belfast",
+      capability: "Testing",
+      band: "Consultant",
+      closingDate: "2027-01-31T23:59:59.000Z",
+      status: "CLOSED",
+      numberOfOpenPositions: 7,
+    });
+
+    const reread = await request(app).get(`/api/job-roles/${editableJobRoleId}`);
+    expect(reread.body).toEqual(response.body);
+  });
+
+  it("clears nullable fields when null is sent", async () => {
+    const response = await request(app)
+      .put(`/api/job-roles/${editableJobRoleId}`)
+      .send({
+        ...validBody,
+        description: null,
+        responsibilities: null,
+        sharePointLink: null,
+        openPositions: null,
+        closingDate: null,
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      description: null,
+      link: null,
+      closingDate: null,
+    });
+  });
+
+  it("returns 404 when the job role does not exist", async () => {
+    const response = await request(app).put("/api/job-roles/9999").send(validBody);
+
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ message: "Job role not found" });
+  });
+
+  it("returns 400 when the id is not a positive integer", async () => {
+    const response = await request(app).put("/api/job-roles/abc").send(validBody);
+
+    expect(response.status).toBe(400);
+    expect(response.body.errors).toEqual([
+      { field: "id", message: "Id must be a positive integer" },
+    ]);
+  });
+
+  it("returns 400 when a required field is missing", async () => {
+    const { location, ...bodyWithoutLocation } = validBody;
+
+    const response = await request(app)
+      .put(`/api/job-roles/${editableJobRoleId}`)
+      .send(bodyWithoutLocation);
+
+    expect(response.status).toBe(400);
+    expect(response.body.errors).toContainEqual(expect.objectContaining({ field: "location" }));
+  });
+
+  it("returns 400 when the status is outside the enum", async () => {
+    const response = await request(app)
+      .put(`/api/job-roles/${editableJobRoleId}`)
+      .send({ ...validBody, status: "PENDING" });
+
+    expect(response.status).toBe(400);
+    expect(response.body.errors).toContainEqual(expect.objectContaining({ field: "status" }));
+  });
+
+  it("returns 400 when an unknown field is sent", async () => {
+    const response = await request(app)
+      .put(`/api/job-roles/${editableJobRoleId}`)
+      .send({ ...validBody, id: 99 });
+
+    expect(response.status).toBe(400);
+  });
+
+  it("returns 400 when sharePointLink is not a url", async () => {
+    const response = await request(app)
+      .put(`/api/job-roles/${editableJobRoleId}`)
+      .send({ ...validBody, sharePointLink: "not-a-url" });
+
+    expect(response.status).toBe(400);
+    expect(response.body.errors).toContainEqual(
+      expect.objectContaining({ field: "sharePointLink" }),
+    );
+  });
+
+  it("returns 400 when openPositions is negative", async () => {
+    const response = await request(app)
+      .put(`/api/job-roles/${editableJobRoleId}`)
+      .send({ ...validBody, openPositions: -1 });
+
+    expect(response.status).toBe(400);
+    expect(response.body.errors).toContainEqual(
+      expect.objectContaining({ field: "openPositions" }),
+    );
+  });
+
+  // TODO: powinno byc 400 - brak typowanych bledow sprawia, ze P2025 z Prismy konczy sie jako 500
+  it("returns 500 when the band name does not exist", async () => {
+    const response = await request(app)
+      .put(`/api/job-roles/${editableJobRoleId}`)
+      .send({ ...validBody, bandName: "Nonexistent Band" });
+
+    expect(response.status).toBe(500);
+  });
+});

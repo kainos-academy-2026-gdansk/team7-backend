@@ -1,15 +1,16 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { AddJobRoleDto } from "../../src/Dto/JobRoleDTO";
+import type { AddJobRoleDto, UpdateJobRoleRequestDTO } from "../../src/Dto/JobRoleDTO";
 import type { JobRoleDetailed } from "../../src/models/JobRole";
 import { JobRoleService } from "../../src/services/JobRoleService";
 
 const findUnique = vi.fn();
 const findMany = vi.fn();
 const create = vi.fn();
+const update = vi.fn();
 
 const dbMock = {
-  jobRole: { findUnique, findMany, create },
+  jobRole: { findUnique, findMany, create, update },
 } as unknown as PrismaClient;
 
 type JobRoleWithRelations = Prisma.JobRoleGetPayload<{
@@ -93,6 +94,19 @@ const createdJobRoleRecordMock: JobRoleWithRelations = {
   capability: { id: 5, name: "Engineering" },
   createdAt: new Date("2026-01-03T00:00:00.000Z"),
   updatedAt: new Date("2026-01-03T00:00:00.000Z"),
+};
+
+const updateJobRoleDtoMock: UpdateJobRoleRequestDTO = {
+  jobRoleName: "Software Engineer",
+  location: "Gdansk",
+  status: "OPEN",
+  bandName: "Senior Associate",
+  capabilityName: "Engineering",
+  description: "Builds things",
+  responsibilities: "Writes code",
+  sharePointLink: "https://example.com/role/1",
+  openPositions: 3,
+  closingDate: "2026-12-31T00:00:00.000Z",
 };
 
 describe("JobRoleService", () => {
@@ -254,6 +268,101 @@ describe("JobRoleService", () => {
 
       await expect(jobRoleService.createJobRole(addJobRoleDtoMock)).rejects.toThrow(
         "insert failed",
+      );
+    });
+  });
+
+  describe("updateJobRole", () => {
+    it("returns the mapped job role when the update succeeds", async () => {
+      findUnique.mockResolvedValue({ id: 1 });
+      update.mockResolvedValue(jobRoleRecordMock);
+
+      const result = await jobRoleService.updateJobRole(1, updateJobRoleDtoMock);
+
+      expect(result).toEqual(jobRoleDetailedMock);
+    });
+
+    it("returns null and skips the update when the job role does not exist", async () => {
+      findUnique.mockResolvedValue(null);
+
+      const result = await jobRoleService.updateJobRole(999, updateJobRoleDtoMock);
+
+      expect(result).toBeNull();
+      expect(update).not.toHaveBeenCalled();
+    });
+
+    it("maps the dto onto prisma columns and connects relations by name", async () => {
+      findUnique.mockResolvedValue({ id: 1 });
+      update.mockResolvedValue(jobRoleRecordMock);
+
+      await jobRoleService.updateJobRole(1, updateJobRoleDtoMock);
+
+      expect(update).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: {
+          roleName: "Software Engineer",
+          location: "Gdansk",
+          status: "OPEN",
+          description: "Builds things",
+          responsibilities: "Writes code",
+          sharePointLink: "https://example.com/role/1",
+          openPositions: 3,
+          closingDate: "2026-12-31T00:00:00.000Z",
+          band: { connect: { name: "Senior Associate" } },
+          capability: { connect: { name: "Engineering" } },
+        },
+        include: { band: true, capability: true },
+      });
+    });
+
+    it("writes nulls when nullable fields are cleared", async () => {
+      findUnique.mockResolvedValue({ id: 1 });
+      update.mockResolvedValue(jobRoleRecordMock);
+
+      await jobRoleService.updateJobRole(1, {
+        ...updateJobRoleDtoMock,
+        description: null,
+        responsibilities: null,
+        sharePointLink: null,
+        openPositions: null,
+        closingDate: null,
+      });
+
+      expect(update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            description: null,
+            responsibilities: null,
+            sharePointLink: null,
+            openPositions: null,
+            closingDate: null,
+          }),
+        }),
+      );
+    });
+
+    it("falls back to defaults when the updated row has null optional fields", async () => {
+      findUnique.mockResolvedValue({ id: 1 });
+      update.mockResolvedValue({
+        ...jobRoleRecordMock,
+        responsibilities: null,
+        openPositions: null,
+      });
+
+      const result = await jobRoleService.updateJobRole(1, updateJobRoleDtoMock);
+
+      expect(result).toMatchObject({
+        responsibilities: "",
+        numberOfOpenPositions: 0,
+      });
+    });
+
+    it("rejects when prisma update fails", async () => {
+      findUnique.mockResolvedValue({ id: 1 });
+      update.mockRejectedValue(new Error("db down"));
+
+      await expect(jobRoleService.updateJobRole(1, updateJobRoleDtoMock)).rejects.toThrow(
+        "db down",
       );
     });
   });

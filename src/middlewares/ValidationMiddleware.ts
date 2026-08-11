@@ -29,7 +29,6 @@ export function validateBody(schema: ZodSchema): RequestHandler {
       });
       return;
     }
-    req.body = result.data;
     next();
   };
 }

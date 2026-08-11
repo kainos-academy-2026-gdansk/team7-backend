@@ -38,4 +38,18 @@ export class JobRoleController {
       next(error);
     }
   };
+
+  updateJobRole = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const id = Number(req.params.id);
+      const updatedJobRole = await this.jobRoleService.updateJobRole(id, req.body);
+      if (!updatedJobRole) {
+        res.status(404).json({ message: "Job role not found" });
+        return;
+      }
+      res.status(200).json(JobRoleMapper.toJobRoleDetailedDto(updatedJobRole));
+    } catch (error) {
+      next(error);
+    }
+  };
 }
