@@ -52,4 +52,20 @@ export class JobRoleController {
       next(error);
     }
   };
+
+  deleteJobRole = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const id = Number(req.params.id);
+      const deleted = await this.jobRoleService.deleteJobRole(id);
+
+      if (!deleted) {
+        res.status(404).json({ message: "Job role not found" });
+        return;
+      }
+
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  };
 }

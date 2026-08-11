@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import type { JobRoleStatus } from "../Dto/JobRoleDTO";
 export type JobRoleGetAllSelectPayload = {
+  id: number;
   roleName: string;
   location: string;
   closingDate: Date | null;

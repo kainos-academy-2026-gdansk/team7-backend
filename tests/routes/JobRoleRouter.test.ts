@@ -3,7 +3,7 @@ import type { PrismaClient } from "@prisma/client";
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 import type Express from "express";
 import request from "supertest";
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const CONTAINER_TIMEOUT_MS = 120_000;
 
@@ -60,6 +60,7 @@ describe("GET /api/job-roles", () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual([
       {
+        id: seededJobRoleId,
         roleName: "Software Engineer",
         location: "Gdansk",
         capability: "Engineering",
@@ -425,5 +426,56 @@ describe("PUT /api/job-roles/:id", () => {
     expect(response.body.errors).toContainEqual(
       expect.objectContaining({ field: "capabilityName" }),
     );
+  });
+});
+
+describe("DELETE /api/job-roles/:id", () => {
+  let deletableJobRoleId: number;
+
+  beforeEach(async () => {
+    const band = await prisma.band.findUniqueOrThrow({ where: { name: "Senior Associate" } });
+    const capability = await prisma.capability.findUniqueOrThrow({
+      where: { name: "Engineering" },
+    });
+    const jobRole = await prisma.jobRole.create({
+      data: {
+        roleName: "Deletable Role",
+        location: "Gdansk",
+        status: "OPEN",
+        bandId: band.id,
+        capabilityId: capability.id,
+      },
+    });
+
+    deletableJobRoleId = jobRole.id;
+  });
+
+  it("returns 204 with an empty body when the job role is deleted", async () => {
+    const response = await request(app).delete(`/api/job-roles/${deletableJobRoleId}`);
+
+    expect(response.status).toBe(204);
+    expect(response.body).toEqual({});
+  });
+
+  it("removes the job role from the database", async () => {
+    await request(app).delete(`/api/job-roles/${deletableJobRoleId}`);
+
+    const reread = await request(app).get(`/api/job-roles/${deletableJobRoleId}`);
+
+    expect(reread.status).toBe(404);
+  });
+
+  it("returns 404 when the job role does not exist", async () => {
+    const response = await request(app).delete("/api/job-roles/999999");
+
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ message: "Job role not found" });
+  });
+
+  it("returns 400 when the id is not a positive integer", async () => {
+    const response = await request(app).delete("/api/job-roles/abc");
+
+    expect(response.status).toBe(400);
+    expect(response.body.errors).toContainEqual(expect.objectContaining({ field: "id" }));
   });
 });

@@ -9,11 +9,12 @@ const findUnique = vi.fn();
 const findMany = vi.fn();
 const create = vi.fn();
 const update = vi.fn();
+const deleteJobRoleMock = vi.fn();
 const bandFindUnique = vi.fn();
 const capabilityFindUnique = vi.fn();
 
 const dbMock = {
-  jobRole: { findUnique, findMany, create, update },
+  jobRole: { findUnique, findMany, create, update, delete: deleteJobRoleMock },
   band: { findUnique: bandFindUnique },
   capability: { findUnique: capabilityFindUnique },
 } as unknown as PrismaClient;
@@ -389,6 +390,34 @@ describe("JobRoleService", () => {
         ["capabilityName"],
       ]);
       expect(update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("deleteJobRole", () => {
+    it("deletes the job role and returns true when it exists", async () => {
+      findUnique.mockResolvedValue(jobRoleRecordMock);
+      deleteJobRoleMock.mockResolvedValue(jobRoleRecordMock);
+
+      const result = await jobRoleService.deleteJobRole(1);
+
+      expect(result).toBe(true);
+      expect(deleteJobRoleMock).toHaveBeenCalledWith({ where: { id: 1 } });
+    });
+
+    it("returns false and does not delete when the job role does not exist", async () => {
+      findUnique.mockResolvedValue(null);
+
+      const result = await jobRoleService.deleteJobRole(999);
+
+      expect(result).toBe(false);
+      expect(deleteJobRoleMock).not.toHaveBeenCalled();
+    });
+
+    it("rejects when prisma delete fails", async () => {
+      findUnique.mockResolvedValue(jobRoleRecordMock);
+      deleteJobRoleMock.mockRejectedValue(new Error("db down"));
+
+      await expect(jobRoleService.deleteJobRole(1)).rejects.toThrow("db down");
     });
   });
 });

@@ -11,6 +11,7 @@ export class JobRoleMapper {
 
   static toAllResponseDto(role: JobRoleGetAllSelectPayload): JobRoleAllResponseDto {
     return {
+      id: role.id,
       roleName: role.roleName,
       location: role.location,
       capability: role.capability.name,
