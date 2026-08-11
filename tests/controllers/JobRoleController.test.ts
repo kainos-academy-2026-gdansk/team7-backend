@@ -14,12 +14,14 @@ const findAll = vi.fn();
 const getJobRoleById = vi.fn();
 const createJobRole = vi.fn();
 const updateJobRole = vi.fn();
+const deleteJobRole = vi.fn();
 
 const jobRoleServiceMock = {
   findAll,
   getJobRoleById,
   createJobRole,
   updateJobRole,
+  deleteJobRole,
 } as unknown as JobRoleService;
 
 const jobRoleDetailedMock: JobRoleDetailed = {
@@ -136,14 +138,16 @@ describe("JobRoleController", () => {
   let next: NextFunction;
   let status: ReturnType<typeof vi.fn>;
   let json: ReturnType<typeof vi.fn>;
+  let send: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.resetAllMocks();
 
     json = vi.fn();
-    status = vi.fn(() => ({ json }));
+    send = vi.fn();
+    status = vi.fn(() => ({ json, send }));
     req = { params: { id: "1" } } as unknown as Request;
-    res = { status, json } as unknown as Response;
+    res = { status, json, send } as unknown as Response;
     next = vi.fn();
 
     jobRoleController = new JobRoleController(jobRoleServiceMock);
@@ -330,6 +334,44 @@ describe("JobRoleController", () => {
       updateJobRole.mockRejectedValue(error);
 
       await jobRoleController.updateJobRole(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(error);
+      expect(status).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("deleteJobRole", () => {
+    it("responds with 204 when the job role is deleted", async () => {
+      deleteJobRole.mockResolvedValue(true);
+
+      await jobRoleController.deleteJobRole(req, res, next);
+
+      expect(status).toHaveBeenCalledWith(204);
+      expect(send).toHaveBeenCalled();
+    });
+
+    it("calls the service with the id parsed from the route params", async () => {
+      deleteJobRole.mockResolvedValue(true);
+
+      await jobRoleController.deleteJobRole(req, res, next);
+
+      expect(deleteJobRole).toHaveBeenCalledWith(1);
+    });
+
+    it("responds with 404 when the service returns false", async () => {
+      deleteJobRole.mockResolvedValue(false);
+
+      await jobRoleController.deleteJobRole(req, res, next);
+
+      expect(status).toHaveBeenCalledWith(404);
+      expect(json).toHaveBeenCalledWith({ message: "Job role not found" });
+    });
+
+    it("forwards errors to next when the service throws", async () => {
+      const error = new Error("Service error");
+      deleteJobRole.mockRejectedValue(error);
+
+      await jobRoleController.deleteJobRole(req, res, next);
 
       expect(next).toHaveBeenCalledWith(error);
       expect(status).not.toHaveBeenCalled();
