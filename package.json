@@ -34,6 +34,7 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "morgan": "^1.11.0",
+    "prisma": "^6.19.3",
     "winston": "^3.19.0",
     "zod": "^4.4.3"
   },
@@ -45,7 +46,6 @@
     "@types/node": "^26.1.2",
     "@types/supertest": "^7.2.1",
     "@vitest/coverage-v8": "^4.1.10",
-    "prisma": "^6.19.3",
     "supertest": "^7.2.2",
     "testcontainers": "^12.1.0",
     "ts-node": "^10.9.2",
