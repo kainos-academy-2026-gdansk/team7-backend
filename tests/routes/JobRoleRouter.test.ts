@@ -20,7 +20,6 @@ beforeAll(async () => {
 
   execSync("npx prisma migrate deploy", { stdio: "inherit" });
 
-  // dynamiczny import - prismaClient.ts czyta DATABASE_URL przy starcie modulu
   prisma = (await import("../../src/prismaClient")).default;
   app = (await import("../../src/app")).default;
 
@@ -275,7 +274,6 @@ describe("PUT /api/job-roles/:id", () => {
     closingDate: "2027-01-31T23:59:59.000Z",
   };
 
-  // osobny rekord, zeby PUT nie modyfikowal roli uzywanej przez testy GET
   beforeAll(async () => {
     await prisma.band.create({ data: { name: "Consultant" } });
     await prisma.capability.create({ data: { name: "Testing" } });
