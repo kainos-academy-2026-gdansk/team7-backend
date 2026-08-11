@@ -203,7 +203,6 @@ describe("JobRoleController", () => {
         body: {
           roleName: "Data Engineer",
           location: "Warsaw",
-          status: "OPEN",
           bandId: 2,
           capabilityId: 5,
           description: "Builds data pipelines",
@@ -226,7 +225,6 @@ describe("JobRoleController", () => {
         body: {
           roleName: "Data Engineer",
           location: "Warsaw",
-          status: "OPEN",
           bandId: 2,
           capabilityId: 5,
           description: null,

@@ -36,7 +36,6 @@ export const AddJobRoleRequestSchema = z.object({
     .string()
     .min(1, "Location is required")
     .max(255, "Location must not exceed 255 characters"),
-  status: JobRoleStatusSchema,
   bandId: z
     .number()
     .int("Band ID must be an integer")
@@ -70,7 +69,8 @@ export const AddJobRoleRequestSchema = z.object({
     .transform((val) => (val ? new Date(val) : null)),
 });
 
-export type AddJobRoleRequestDto = z.infer<typeof AddJobRoleRequestSchema>;
+export type AddJobRoleRequestDto = z.input<typeof AddJobRoleRequestSchema>;
+export type AddJobRoleDto = z.infer<typeof AddJobRoleRequestSchema>;
 
 export interface AddJobRoleResponseDto {
   id: number;
@@ -86,6 +86,4 @@ export interface AddJobRoleResponseDto {
   closingDate: string | null;
 }
 
-// Keep AddJobRoleSchema for backwards compatibility (but it's now the request schema)
 export const AddJobRoleSchema = AddJobRoleRequestSchema;
-export type AddJobRoleDto = AddJobRoleRequestDto;

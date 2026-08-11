@@ -68,7 +68,6 @@ const jobRoleListMock = [
 const addJobRoleDtoMock: AddJobRoleDto = {
   roleName: "Data Engineer",
   location: "Warsaw",
-  status: "OPEN",
   bandId: 2,
   capabilityId: 5,
   description: "Builds data pipelines",
@@ -207,26 +206,6 @@ describe("JobRoleService", () => {
       });
     });
 
-    it("persists OPEN status even when payload status is CLOSED", async () => {
-      create.mockResolvedValue({
-        ...createdJobRoleRecordMock,
-        status: "OPEN",
-      });
-
-      await jobRoleService.createJobRole({
-        ...addJobRoleDtoMock,
-        status: "CLOSED",
-      });
-
-      expect(create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            status: "OPEN",
-          }),
-        }),
-      );
-    });
-
     it("passes null/undefined optional fields through to prisma", async () => {
       create.mockResolvedValue({
         ...createdJobRoleRecordMock,
@@ -241,7 +220,6 @@ describe("JobRoleService", () => {
       await jobRoleService.createJobRole({
         roleName: "Platform Engineer",
         location: "Remote",
-        status: "OPEN",
         bandId: 2,
         capabilityId: 5,
         description: null,

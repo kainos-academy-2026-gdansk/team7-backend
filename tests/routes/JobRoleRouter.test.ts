@@ -134,7 +134,6 @@ describe("POST /api/job-roles", () => {
     const response = await request(app).post("/api/job-roles").send({
       roleName: "Data Engineer",
       location: "Warsaw",
-      status: "OPEN",
       bandId: seededBandId,
       capabilityId: seededCapabilityId,
       description: "Builds data pipelines",
@@ -166,7 +165,6 @@ describe("POST /api/job-roles", () => {
     const response = await request(app).post("/api/job-roles").send({
       roleName: "Platform Engineer",
       location: "Remote",
-      status: "OPEN",
       bandId: seededBandId,
       capabilityId: seededCapabilityId,
       description: null,
@@ -196,7 +194,6 @@ describe("POST /api/job-roles", () => {
   it("returns 400 when a required field is missing", async () => {
     const response = await request(app).post("/api/job-roles").send({
       location: "Warsaw",
-      status: "OPEN",
       bandId: seededBandId,
       capabilityId: seededCapabilityId,
     });
@@ -205,22 +202,6 @@ describe("POST /api/job-roles", () => {
     expect(response.body.errors).toContainEqual({
       field: "roleName",
       message: "Invalid input: expected string, received undefined",
-    });
-  });
-
-  it("returns 400 when status is invalid", async () => {
-    const response = await request(app).post("/api/job-roles").send({
-      roleName: "QA Engineer",
-      location: "Krakow",
-      status: "PENDING",
-      bandId: seededBandId,
-      capabilityId: seededCapabilityId,
-    });
-
-    expect(response.status).toBe(400);
-    expect(response.body.errors).toContainEqual({
-      field: "status",
-      message: 'Invalid option: expected one of "OPEN"|"CLOSED"',
     });
   });
 
@@ -251,7 +232,6 @@ describe("POST /api/job-roles", () => {
     const response = await request(app).post("/api/job-roles").send({
       roleName: "QA Engineer",
       location: "Krakow",
-      status: "OPEN",
       bandId: seededBandId,
       capabilityId: seededCapabilityId,
       closingDate: "31-12-2026",
@@ -270,7 +250,6 @@ describe("POST /api/job-roles", () => {
     const response = await request(app).post("/api/job-roles").send({
       roleName: "Data Engineer",
       location: "Warsaw",
-      status: "OPEN",
       bandId: seededBandId,
       capabilityId: seededCapabilityId,
     });
