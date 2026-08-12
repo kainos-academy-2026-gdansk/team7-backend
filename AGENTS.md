@@ -88,6 +88,9 @@ A plan is only complete when it contains:
 
 Do not start implementing while open questions or unapproved new things remain.
 
+The plan lives in `.ai/plans/<STORY-ID>-plan.md`. That folder is git-ignored: it is a working handoff
+between the planning and delivery sessions, never part of a commit or PR.
+
 ---
 
 ## 4. Commands

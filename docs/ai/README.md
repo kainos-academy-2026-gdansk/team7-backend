@@ -20,8 +20,9 @@ The two workflow agents live in [.github/agents/](../../.github/agents/).
 ## Quick start for a new story
 
 1. Select the **Plan user story** agent, give it the story ID (e.g. `US-012-01`).
-2. Answer its questions; approve the plan (and anything under *Needs approval*).
-3. Switch to the **Deliver user story** agent and paste the approved plan.
+2. Answer its questions; approve the plan (and anything under *Needs approval*). It saves the plan to
+   `.ai/plans/<STORY-ID>-plan.md` — git-ignored, so paste it into the story or PR too.
+3. Start a **Deliver user story** session with the story ID; it reads the plan file.
 4. Verify manually when it hands over; reply `approve` or `decline` with reasons.
 5. Approve the retrospective and the proposed memory diff, then commit everything together.
 

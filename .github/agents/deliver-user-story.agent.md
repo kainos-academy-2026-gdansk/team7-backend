@@ -17,9 +17,21 @@ Implement → Validate → Dev handover (manual verification)
 
 ## Entry condition
 
-You need an **approved plan** from the `plan-user-story` agent. If the user has not provided one, ask
-for it — or, if they insist on going ahead, produce the plan first and get explicit approval before
-editing a single file. Never start implementing from a raw story.
+You need an **approved plan** from the `plan-user-story` agent. Find it in this order:
+
+1. `.ai/plans/<STORY-ID>-plan.md` — the handoff file that agent writes (git-ignored). Read it and
+   check its status header.
+2. A plan pasted into the chat.
+
+Refuse to start if the plan file says `Status: Draft`, still has unanswered `Open questions`, or has
+unticked `Needs approval` items — ask the developer to finish the planning session first. If only the
+status marker is missing but the developer confirms in chat that the plan is approved, record that
+confirmation in the handover and continue. Never start implementing from a raw story.
+
+As you work, append progress to the plan file (which step is done, deviations, gate results) so a
+later session can resume without re-reading the whole conversation. The plan file is a scratch
+artefact: never commit it, never reference it from `docs/ai/` — durable knowledge goes into the
+retrospective and repository memory instead.
 
 Before touching code, read [AGENTS.md](../../AGENTS.md),
 [docs/ai/patterns.md](../../docs/ai/patterns.md) and [docs/ai/testing.md](../../docs/ai/testing.md).
@@ -90,9 +102,10 @@ Reply **approve** to continue to the retrospective, or **decline** with the reas
 ```
 
 - **Approve** → stage 4.
-- **Decline** → summarise the feedback as planning input, hand back to the `plan-user-story` agent (or
-  re-plan in place if the change is small and the developer agrees), get the revised plan approved,
-  then re-enter stage 1. Do not patch decline feedback ad hoc without a plan.
+- **Decline** → append the feedback to `.ai/plans/<STORY-ID>-plan.md` as planning input, hand back to
+  the `plan-user-story` agent (or re-plan in place if the change is small and the developer agrees),
+  get the revised plan approved, then re-enter stage 1. Do not patch decline feedback ad hoc without
+  a plan.
 
 ## Stage 4 — Retrospective
 
@@ -123,4 +136,5 @@ linked to the retrospective or PR. Correct or remove outdated entries rather tha
 contradicting one. Promote to AGENTS.md or copilot-instructions.md only when the lesson would change
 behaviour on most future tasks.
 
-Finish by listing what remains for the human: review, push, PR, status transition.
+Finish by listing what remains for the human: review, push, PR, status transition. Mention that
+`.ai/plans/<STORY-ID>-plan.md` is now obsolete and can be deleted.

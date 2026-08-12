@@ -25,11 +25,13 @@ Two custom agents implement the two halves:
 
 | Stage | Agent | Tools |
 | ----- | ----- | ----- |
-| Memory → Intake → Planning | [plan-user-story](../../.github/agents/plan-user-story.agent.md) | read-only |
+| Memory → Intake → Planning | [plan-user-story](../../.github/agents/plan-user-story.agent.md) | read + write the plan file only |
 | Implementation → Validation → Handover → Retrospective | [deliver-user-story](../../.github/agents/deliver-user-story.agent.md) | read/write/execute |
 
-Splitting them is deliberate: the planning agent cannot accidentally modify the repository, and the
-delivery agent starts from an approved plan instead of its own interpretation of the story.
+Splitting them is deliberate: the planning agent cannot modify the codebase, and the delivery agent
+starts from an approved plan instead of its own interpretation of the story. The two are joined by
+`.ai/plans/<STORY-ID>-plan.md` — a git-ignored working file, so plans survive between chat sessions
+without polluting the repository.
 
 ---
 
@@ -67,8 +69,9 @@ validation gates, assumptions, open questions, items needing approval, and risk/
   goes in a **Needs approval** list, and work stops there until a developer answers.
 - No code is written in this stage.
 
-Exit criteria: developer replies "approved" (or answers the questions and then approves). The approved
-plan is pasted into the story/PR description so it survives the chat session.
+Exit criteria: developer replies "approved" (or answers the questions and then approves). The plan is
+stored at `.ai/plans/<STORY-ID>-plan.md` (git-ignored) so the delivery agent can pick it up in a later
+session; copy it into the story or PR description too, since `.ai/` is never committed.
 
 ## 3. Implementation
 
