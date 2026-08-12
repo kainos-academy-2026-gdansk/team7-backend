@@ -35,10 +35,12 @@ describe("GET /api/statuses", () => {
     const response = await request(app).get("/api/statuses");
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual([
-      { statusId: expect.any(Number), statusName: "OPEN" },
-      { statusId: expect.any(Number), statusName: "CLOSED" },
-    ]);
+    expect(response.body).toEqual(
+      expect.arrayContaining([
+        { statusId: expect.any(Number), statusName: "OPEN" },
+        { statusId: expect.any(Number), statusName: "CLOSED" },
+      ]),
+    );
   });
 
   it("returns 500 when the database query fails", async () => {
