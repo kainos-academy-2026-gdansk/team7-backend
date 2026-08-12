@@ -1,0 +1,51 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgres://postgres:postgres@db:5432/kainos_work-db
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - kainos-work-network
+      - kainos-work-network-db
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: kainos_work-db
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d kainos_work-db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - kainos-work-network-db
+
+volumes:
+  db-data:
+networks:
+  # Shared with the frontend repo's compose stack; create once with:
+  # docker network create kainos-work-network
+  kainos-work-network:
+    external: true
+  kainos-work-network-db:
+    driver: bridge
+

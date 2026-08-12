@@ -54,6 +54,9 @@ tmp/
 temp/
 *.tmp
 
+# AI working files (plans handed between agent sessions)
+.ai/
+
 # Editors / IDEs
 .idea/
 *.swp
@@ -70,3 +73,5 @@ temp/
 ehthumbs.db
 Thumbs.db
 desktop.ini
+KAINOS-ZSCALER G2_2027.p7b
+AGENTS_template.md
