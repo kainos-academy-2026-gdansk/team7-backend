@@ -8,48 +8,50 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-enum JobRoleStatus {
-  OPEN
-  CLOSED
-}
-
 model JobRole {
-  id             Int             @id @default(autoincrement())
-  roleName       String
-  location       String
-  closingDate    DateTime?
-  status         JobRoleStatus
+  id          Int       @id @default(autoincrement())
+  roleName    String
+  location    String
+  closingDate DateTime?
 
-  description    String?
-  openPositions  Int?
-  sharePointLink String?
-  responsibilities String?
+  description           String?
+  responsibilities      String?
+  sharepointUrl         String?
+  numberOfOpenPositions Int?
 
-  bandId         Int
-  capabilityId   Int
+  statusId     Int
+  bandId       Int
+  capabilityId Int
 
-  band           Band           @relation(fields: [bandId], references: [id])
-  capability     Capability     @relation(fields: [capabilityId], references: [id])
+  status     Status     @relation(fields: [statusId], references: [statusId])
+  band       Band       @relation(fields: [bandId], references: [id])
+  capability Capability @relation(fields: [capabilityId], references: [id])
 
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@index([status])
+  @@index([statusId])
   @@index([capabilityId])
   @@index([bandId])
 }
 
 model Band {
-  id       Int       @id @default(autoincrement())
-  name     String    @unique
+  id   Int    @id @default(autoincrement())
+  name String @unique
 
   jobRoles JobRole[]
 }
 
 model Capability {
-  id       Int       @id @default(autoincrement())
-  name     String    @unique
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  jobRoles JobRole[]
+}
+
+model Status {
+  statusId   Int    @id @default(autoincrement())
+  statusName String @unique
 
   jobRoles JobRole[]
 }

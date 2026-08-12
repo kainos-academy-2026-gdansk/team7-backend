@@ -1,5 +1,4 @@
 import type { Prisma } from "@prisma/client";
-import type { JobRoleStatus } from "../Dto/JobRoleDTO";
 export type JobRoleGetAllSelectPayload = {
   id: number;
   roleName: string;
@@ -7,7 +6,7 @@ export type JobRoleGetAllSelectPayload = {
   closingDate: Date | null;
   band: { name: string };
   capability: { name: string };
-  status: JobRoleStatus;
+  status: { statusName: string };
 };
 
 interface JobRoleDetailed {
@@ -15,7 +14,7 @@ interface JobRoleDetailed {
   jobRoleName: string;
   description: string | null;
   responsibilities: string;
-  link: string | null;
+  sharepointUrl: string | null;
   location: string;
   capability: {
     id: number;
@@ -26,12 +25,15 @@ interface JobRoleDetailed {
     name: string;
   };
   closingDate: Date | null;
-  status: JobRoleStatus;
+  status: {
+    statusId: number;
+    statusName: string;
+  };
   numberOfOpenPositions: number;
 }
 
 export type { JobRoleDetailed };
 
 export type JobRoleWithRelations = Prisma.JobRoleGetPayload<{
-  include: { band: true; capability: true };
+  include: { band: true; capability: true; status: true };
 }>;

@@ -4,13 +4,13 @@ import { updateJobRoleSchema } from "../../src/Dto/JobRoleDTO";
 const validBody = {
   jobRoleName: "Software Engineer",
   location: "Gdansk",
-  status: "OPEN",
+  statusId: 1,
   bandName: "Senior Associate",
   capabilityName: "Engineering",
   description: "Builds things",
   responsibilities: "Writes code",
-  sharePointLink: "https://example.com/role/1",
-  openPositions: 3,
+  sharepointUrl: "https://example.com/role/1",
+  numberOfOpenPositions: 3,
   closingDate: "2026-12-31T00:00:00.000Z",
 };
 
@@ -39,8 +39,8 @@ describe("updateJobRoleSchema", () => {
     const result = parse({
       description: null,
       responsibilities: null,
-      sharePointLink: null,
-      openPositions: null,
+      sharepointUrl: null,
+      numberOfOpenPositions: null,
       closingDate: null,
     });
 
@@ -48,8 +48,8 @@ describe("updateJobRoleSchema", () => {
     expect(result.data).toMatchObject({
       description: null,
       responsibilities: null,
-      sharePointLink: null,
-      openPositions: null,
+      sharepointUrl: null,
+      numberOfOpenPositions: null,
       closingDate: null,
     });
   });
@@ -78,13 +78,13 @@ describe("updateJobRoleSchema", () => {
     const requiredFields = [
       "jobRoleName",
       "location",
-      "status",
+      "statusId",
       "bandName",
       "capabilityName",
       "description",
       "responsibilities",
-      "sharePointLink",
-      "openPositions",
+      "sharepointUrl",
+      "numberOfOpenPositions",
       "closingDate",
     ];
 
@@ -150,43 +150,43 @@ describe("updateJobRoleSchema", () => {
     });
   });
 
-  describe("status", () => {
-    it.each(["OPEN", "CLOSED"])("accepts %s", (status) => {
-      expect(parse({ status }).success).toBe(true);
+  describe("statusId", () => {
+    it.each([1, 2, 99])("accepts %s", (statusId) => {
+      expect(parse({ statusId }).success).toBe(true);
     });
 
-    it.each(["PENDING", "open", "", null])("rejects %s", (status) => {
-      const result = parse({ status });
+    it.each([0, -1, 1.5, "1", null])("rejects %s", (statusId) => {
+      const result = parse({ statusId });
 
-      expect(fieldErrors(result)).toContainEqual(expect.objectContaining({ field: "status" }));
+      expect(fieldErrors(result)).toContainEqual(expect.objectContaining({ field: "statusId" }));
     });
   });
 
-  describe("sharePointLink", () => {
+  describe("sharepointUrl", () => {
     it("accepts a valid url", () => {
-      expect(parse({ sharePointLink: "https://example.com/role/2" }).success).toBe(true);
+      expect(parse({ sharepointUrl: "https://example.com/role/2" }).success).toBe(true);
     });
 
-    it.each(["not-a-url", "example.com", ""])("rejects %s", (sharePointLink) => {
-      const result = parse({ sharePointLink });
+    it.each(["not-a-url", "example.com", ""])("rejects %s", (sharepointUrl) => {
+      const result = parse({ sharepointUrl });
 
       expect(fieldErrors(result)).toContainEqual({
-        field: "sharePointLink",
+        field: "sharepointUrl",
         message: "Must be a valid URL",
       });
     });
   });
 
-  describe("openPositions", () => {
-    it.each([0, 1, 250])("accepts %s", (openPositions) => {
-      expect(parse({ openPositions }).success).toBe(true);
+  describe("numberOfOpenPositions", () => {
+    it.each([0, 1, 250])("accepts %s", (numberOfOpenPositions) => {
+      expect(parse({ numberOfOpenPositions }).success).toBe(true);
     });
 
-    it.each([-1, 1.5, "3"])("rejects %s", (openPositions) => {
-      const result = parse({ openPositions });
+    it.each([-1, 1.5, "3"])("rejects %s", (numberOfOpenPositions) => {
+      const result = parse({ numberOfOpenPositions });
 
       expect(fieldErrors(result)).toContainEqual(
-        expect.objectContaining({ field: "openPositions" }),
+        expect.objectContaining({ field: "numberOfOpenPositions" }),
       );
     });
   });
@@ -213,10 +213,10 @@ describe("updateJobRoleSchema", () => {
   });
 
   it("reports every invalid field at once", () => {
-    const result = parse({ jobRoleName: "", location: "", status: "PENDING" });
+    const result = parse({ jobRoleName: "", location: "", statusId: 0 });
 
     expect(fieldErrors(result).map((error) => error.field)).toEqual(
-      expect.arrayContaining(["jobRoleName", "location", "status"]),
+      expect.arrayContaining(["jobRoleName", "location", "statusId"]),
     );
   });
 });

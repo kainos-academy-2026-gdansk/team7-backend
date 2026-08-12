@@ -12,15 +12,17 @@ const update = vi.fn();
 const deleteJobRoleMock = vi.fn();
 const bandFindUnique = vi.fn();
 const capabilityFindUnique = vi.fn();
+const statusFindUnique = vi.fn();
 
 const dbMock = {
   jobRole: { findUnique, findMany, create, update, delete: deleteJobRoleMock },
   band: { findUnique: bandFindUnique },
   capability: { findUnique: capabilityFindUnique },
+  status: { findUnique: statusFindUnique },
 } as unknown as PrismaClient;
 
 type JobRoleWithRelations = Prisma.JobRoleGetPayload<{
-  include: { band: true; capability: true };
+  include: { band: true; capability: true; status: true };
 }>;
 
 const jobRoleRecordMock: JobRoleWithRelations = {
@@ -28,15 +30,16 @@ const jobRoleRecordMock: JobRoleWithRelations = {
   roleName: "Software Engineer",
   location: "Gdansk",
   closingDate: new Date("2026-12-31T00:00:00.000Z"),
-  status: "OPEN",
+  statusId: 1,
   description: "Builds things",
   responsibilities: "Writes code",
-  openPositions: 3,
-  sharePointLink: "https://example.com/role/1",
+  numberOfOpenPositions: 3,
+  sharepointUrl: "https://example.com/role/1",
   bandId: 2,
   capabilityId: 5,
   band: { id: 2, name: "Senior Associate" },
   capability: { id: 5, name: "Engineering" },
+  status: { statusId: 1, statusName: "OPEN" },
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
   updatedAt: new Date("2026-01-02T00:00:00.000Z"),
 };
@@ -46,12 +49,12 @@ const jobRoleDetailedMock: JobRoleDetailed = {
   jobRoleName: "Software Engineer",
   description: "Builds things",
   responsibilities: "Writes code",
-  link: "https://example.com/role/1",
+  sharepointUrl: "https://example.com/role/1",
   location: "Gdansk",
   capability: { id: 5, name: "Engineering" },
   band: { id: 2, name: "Senior Associate" },
   closingDate: new Date("2026-12-31T00:00:00.000Z"),
-  status: "OPEN",
+  status: { statusId: 1, statusName: "OPEN" },
   numberOfOpenPositions: 3,
 };
 
@@ -79,8 +82,8 @@ const addJobRoleDtoMock: AddJobRoleDto = {
   capabilityId: 5,
   description: "Builds data pipelines",
   responsibilities: "Designs ETL jobs",
-  openPositions: 2,
-  sharePointLink: "https://example.com/role/2",
+  numberOfOpenPositions: 2,
+  sharepointUrl: "https://example.com/role/2",
   closingDate: new Date("2026-11-30T00:00:00.000Z"),
 };
 
@@ -89,15 +92,16 @@ const createdJobRoleRecordMock: JobRoleWithRelations = {
   roleName: "Data Engineer",
   location: "Warsaw",
   closingDate: new Date("2026-11-30T00:00:00.000Z"),
-  status: "OPEN",
+  statusId: 1,
   description: "Builds data pipelines",
   responsibilities: "Designs ETL jobs",
-  openPositions: 2,
-  sharePointLink: "https://example.com/role/2",
+  numberOfOpenPositions: 2,
+  sharepointUrl: "https://example.com/role/2",
   bandId: 2,
   capabilityId: 5,
   band: { id: 2, name: "Senior Associate" },
   capability: { id: 5, name: "Engineering" },
+  status: { statusId: 1, statusName: "OPEN" },
   createdAt: new Date("2026-01-03T00:00:00.000Z"),
   updatedAt: new Date("2026-01-03T00:00:00.000Z"),
 };
@@ -105,13 +109,13 @@ const createdJobRoleRecordMock: JobRoleWithRelations = {
 const updateJobRoleDtoMock: UpdateJobRoleRequestDTO = {
   jobRoleName: "Software Engineer",
   location: "Gdansk",
-  status: "OPEN",
+  statusId: 1,
   bandName: "Senior Associate",
   capabilityName: "Engineering",
   description: "Builds things",
   responsibilities: "Writes code",
-  sharePointLink: "https://example.com/role/1",
-  openPositions: 3,
+  sharepointUrl: "https://example.com/role/1",
+  numberOfOpenPositions: 3,
   closingDate: "2026-12-31T00:00:00.000Z",
 };
 
@@ -147,7 +151,7 @@ describe("JobRoleService", () => {
 
       expect(findUnique).toHaveBeenCalledWith({
         where: { id: 1 },
-        include: { band: true, capability: true },
+        include: { band: true, capability: true, status: true },
       });
     });
 
@@ -155,7 +159,7 @@ describe("JobRoleService", () => {
       findUnique.mockResolvedValue({
         ...jobRoleRecordMock,
         responsibilities: null,
-        openPositions: null,
+        numberOfOpenPositions: null,
       });
 
       const result = await jobRoleService.getJobRoleById(1);
@@ -193,12 +197,36 @@ describe("JobRoleService", () => {
   });
 
   describe("createJobRole", () => {
+    beforeEach(() => {
+      statusFindUnique.mockResolvedValue({ statusId: 1 });
+    });
+
     it("creates a job role and returns it with relations", async () => {
       create.mockResolvedValue(createdJobRoleRecordMock);
 
       const result = await jobRoleService.createJobRole(addJobRoleDtoMock);
 
       expect(result).toEqual(createdJobRoleRecordMock);
+    });
+
+    it("resolves the default OPEN status before creating the job role", async () => {
+      create.mockResolvedValue(createdJobRoleRecordMock);
+
+      await jobRoleService.createJobRole(addJobRoleDtoMock);
+
+      expect(statusFindUnique).toHaveBeenCalledWith({
+        where: { statusName: "OPEN" },
+        select: { statusId: true },
+      });
+    });
+
+    it("rejects when the OPEN status is not configured", async () => {
+      statusFindUnique.mockResolvedValue(null);
+
+      await expect(jobRoleService.createJobRole(addJobRoleDtoMock)).rejects.toThrow(
+        'Status "OPEN" is not configured',
+      );
+      expect(create).not.toHaveBeenCalled();
     });
 
     it("calls prisma create with mapped input and included relations", async () => {
@@ -211,17 +239,18 @@ describe("JobRoleService", () => {
           roleName: "Data Engineer",
           location: "Warsaw",
           closingDate: new Date("2026-11-30T00:00:00.000Z"),
-          status: "OPEN",
+          statusId: 1,
           description: "Builds data pipelines",
           responsibilities: "Designs ETL jobs",
-          openPositions: 2,
-          sharePointLink: "https://example.com/role/2",
+          numberOfOpenPositions: 2,
+          sharepointUrl: "https://example.com/role/2",
           bandId: 2,
           capabilityId: 5,
         },
         include: {
           band: true,
           capability: true,
+          status: true,
         },
       });
     });
@@ -232,8 +261,8 @@ describe("JobRoleService", () => {
         id: 3,
         description: null,
         responsibilities: null,
-        openPositions: null,
-        sharePointLink: null,
+        numberOfOpenPositions: null,
+        sharepointUrl: null,
         closingDate: null,
       });
 
@@ -244,8 +273,8 @@ describe("JobRoleService", () => {
         capabilityId: 5,
         description: null,
         responsibilities: null,
-        openPositions: null,
-        sharePointLink: null,
+        numberOfOpenPositions: null,
+        sharepointUrl: null,
         closingDate: null,
       });
 
@@ -254,17 +283,18 @@ describe("JobRoleService", () => {
           roleName: "Platform Engineer",
           location: "Remote",
           closingDate: null,
-          status: "OPEN",
+          statusId: 1,
           description: null,
           responsibilities: null,
-          openPositions: null,
-          sharePointLink: null,
+          numberOfOpenPositions: null,
+          sharepointUrl: null,
           bandId: 2,
           capabilityId: 5,
         },
         include: {
           band: true,
           capability: true,
+          status: true,
         },
       });
     });
@@ -282,6 +312,7 @@ describe("JobRoleService", () => {
     beforeEach(() => {
       bandFindUnique.mockResolvedValue({ id: 2 });
       capabilityFindUnique.mockResolvedValue({ id: 5 });
+      statusFindUnique.mockResolvedValue({ statusId: 1 });
     });
 
     it("returns the mapped job role when the update succeeds", async () => {
@@ -313,16 +344,16 @@ describe("JobRoleService", () => {
         data: {
           roleName: "Software Engineer",
           location: "Gdansk",
-          status: "OPEN",
           description: "Builds things",
           responsibilities: "Writes code",
-          sharePointLink: "https://example.com/role/1",
-          openPositions: 3,
+          sharepointUrl: "https://example.com/role/1",
+          numberOfOpenPositions: 3,
           closingDate: "2026-12-31T00:00:00.000Z",
+          status: { connect: { statusId: 1 } },
           band: { connect: { name: "Senior Associate" } },
           capability: { connect: { name: "Engineering" } },
         },
-        include: { band: true, capability: true },
+        include: { band: true, capability: true, status: true },
       });
     });
 
@@ -334,8 +365,8 @@ describe("JobRoleService", () => {
         ...updateJobRoleDtoMock,
         description: null,
         responsibilities: null,
-        sharePointLink: null,
-        openPositions: null,
+        sharepointUrl: null,
+        numberOfOpenPositions: null,
         closingDate: null,
       });
 
@@ -344,8 +375,8 @@ describe("JobRoleService", () => {
           data: expect.objectContaining({
             description: null,
             responsibilities: null,
-            sharePointLink: null,
-            openPositions: null,
+            sharepointUrl: null,
+            numberOfOpenPositions: null,
             closingDate: null,
           }),
         }),
@@ -357,7 +388,7 @@ describe("JobRoleService", () => {
       update.mockResolvedValue({
         ...jobRoleRecordMock,
         responsibilities: null,
-        openPositions: null,
+        numberOfOpenPositions: null,
       });
 
       const result = await jobRoleService.updateJobRole(1, updateJobRoleDtoMock);
@@ -381,6 +412,7 @@ describe("JobRoleService", () => {
       findUnique.mockResolvedValue({ id: 1 });
       bandFindUnique.mockResolvedValue(null);
       capabilityFindUnique.mockResolvedValue(null);
+      statusFindUnique.mockResolvedValue(null);
 
       const error = await jobRoleService.updateJobRole(1, updateJobRoleDtoMock).catch((e) => e);
 
@@ -388,6 +420,20 @@ describe("JobRoleService", () => {
       expect(error.issues.map((issue: { path: PropertyKey[] }) => issue.path)).toEqual([
         ["bandName"],
         ["capabilityName"],
+        ["statusId"],
+      ]);
+      expect(update).not.toHaveBeenCalled();
+    });
+
+    it("throws a ZodError for statusId when only the status is missing", async () => {
+      findUnique.mockResolvedValue({ id: 1 });
+      statusFindUnique.mockResolvedValue(null);
+
+      const error = await jobRoleService.updateJobRole(1, updateJobRoleDtoMock).catch((e) => e);
+
+      expect(error).toBeInstanceOf(ZodError);
+      expect(error.issues.map((issue: { path: PropertyKey[] }) => issue.path)).toEqual([
+        ["statusId"],
       ]);
       expect(update).not.toHaveBeenCalled();
     });
