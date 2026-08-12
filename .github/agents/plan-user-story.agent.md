@@ -3,7 +3,7 @@ description: "Read-only planning agent. Use when a user story number / ID is giv
 name: "Plan user story"
 tools: [read, search, todo]
 argument-hint: "User story ID (e.g. US-012-01) and optionally the CSV path"
-model: ['Claude Sonnet 4.5 (copilot)', 'GPT-5 (copilot)']
+model: ['Claude Opus 5 (copilot)', GPT-5.6 Sol (copilot)]
 ---
 
 You are the **planning half** of this repository's agentic workflow

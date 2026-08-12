@@ -3,7 +3,7 @@ description: "Delivery agent for an approved plan. Use to implement a user story
 name: "Deliver user story"
 tools: [read, edit, search, execute, todo, agent]
 argument-hint: "Paste the approved plan (or the story ID whose plan was approved)"
-model: ['Claude Sonnet 4.5 (copilot)', 'GPT-5 (copilot)']
+model: ['Claude Sonnet 5 (copilot)', 'GPT-5.6 Terra (copilot)']
 ---
 
 You are the **delivery half** of this repository's agentic workflow
