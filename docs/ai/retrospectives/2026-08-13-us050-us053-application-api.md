@@ -10,7 +10,7 @@
 
 ## What was delivered
 
-Added the applicant application API without changing the existing Prisma schema or adding dependencies. `POST /api/job-roles/:id/applications` now accepts experience, salary expectation, and skills for authenticated `USER` accounts, verifies an `OPEN` role with available positions, creates an `IN_PROGRESS` application, and rejects duplicates. `GET /api/applications` returns only the authenticated applicant's applications, including role information, submitted fields, status, timestamps, and oldest-first ordering. DTO, model, mapper, service, controller, router, app wiring, unit tests, PostgreSQL route tests, and manual Postman verification were completed. The updated Postman collection folder was not included in the dedicated branch commit. CV upload, S3 storage, and all admin application assessment behavior are outside this delivery scope.
+Added the applicant application API without changing the existing Prisma schema or adding dependencies. `POST /api/job-roles/:id/apply` now accepts experience, salary expectation, and skills for authenticated `USER` accounts, verifies an `OPEN` role with available positions, creates an `IN_PROGRESS` application, and rejects duplicates. `GET /api/applications` returns only the authenticated applicant's applications, including role information, submitted fields, status, timestamps, and oldest-first ordering. DTO, model, mapper, service, controller, router, app wiring, unit tests, PostgreSQL route tests, and manual Postman verification were completed. The updated Postman collection folder was not included in the dedicated branch commit. CV upload, S3 storage, and all admin application assessment behavior are outside this delivery scope.
 
 ## Validation results
 
@@ -66,7 +66,7 @@ A lesson qualifies only if it is durable, actionable, and general. All three les
 +++ b/docs/ai/memory.md
 @@
  - No pagination or filtering on `GET /api/job-roles`.
-+- Application API: `POST /api/job-roles/:id/applications` and `GET /api/applications` are available to
++- Application API: `POST /api/job-roles/:id/apply` and `GET /api/applications` are available to
 +  authenticated `USER` accounts; applications require experience, salary expectation, and skills, start
 +  as `IN_PROGRESS`, reject unavailable/duplicate submissions with `409`, and list the applicant's own
 +  applications oldest first. CV/S3 storage remains deferred.

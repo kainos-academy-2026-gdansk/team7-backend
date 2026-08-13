@@ -13,7 +13,7 @@ const applicationService = new ApplicationService(prisma);
 const applicationController = new ApplicationController(applicationService);
 
 router.post(
-  "/job-roles/:id/applications",
+  "/job-roles/:id/apply",
   authenticate,
   authorize(Role.USER),
   validateParams(idParamSchema),

@@ -101,12 +101,12 @@ async function createJobRole(
   });
 }
 
-describe("POST /api/job-roles/:id/applications", () => {
+describe("POST /api/job-roles/:id/apply", () => {
   it("creates an IN_PROGRESS application for an eligible USER", async () => {
     const role = await createJobRole();
 
     const response = await request(app)
-      .post(`/api/job-roles/${role.id}/applications`)
+      .post(`/api/job-roles/${role.id}/apply`)
       .set("Authorization", `Bearer ${userToken}`)
       .send(applicationBody);
 
@@ -134,7 +134,7 @@ describe("POST /api/job-roles/:id/applications", () => {
     };
 
     const response = await request(app)
-      .post(`/api/job-roles/${role.id}/applications`)
+      .post(`/api/job-roles/${role.id}/apply`)
       .set("Authorization", `Bearer ${userToken}`)
       .send(paddedBody);
 
@@ -150,7 +150,7 @@ describe("POST /api/job-roles/:id/applications", () => {
     const role = await createJobRole();
 
     const response = await request(app)
-      .post(`/api/job-roles/${role.id}/applications`)
+      .post(`/api/job-roles/${role.id}/apply`)
       .send(applicationBody);
 
     expect(response.status).toBe(401);
@@ -160,7 +160,7 @@ describe("POST /api/job-roles/:id/applications", () => {
     const role = await createJobRole();
 
     const response = await request(app)
-      .post(`/api/job-roles/${role.id}/applications`)
+      .post(`/api/job-roles/${role.id}/apply`)
       .set("Authorization", `Bearer ${adminToken}`)
       .send(applicationBody);
 
@@ -172,7 +172,7 @@ describe("POST /api/job-roles/:id/applications", () => {
     const beforeCount = await prisma.application.count({ where: { applicantId: userId } });
 
     const response = await request(app)
-      .post(`/api/job-roles/${role.id}/applications`)
+      .post(`/api/job-roles/${role.id}/apply`)
       .set("Authorization", `Bearer ${userToken}`)
       .send({ ...applicationBody, cv: "deferred" });
 
@@ -182,7 +182,7 @@ describe("POST /api/job-roles/:id/applications", () => {
 
   it("returns 404 when the job role does not exist", async () => {
     const response = await request(app)
-      .post("/api/job-roles/999999/applications")
+      .post("/api/job-roles/999999/apply")
       .set("Authorization", `Bearer ${userToken}`)
       .send(applicationBody);
 
@@ -203,7 +203,7 @@ describe("POST /api/job-roles/:id/applications", () => {
       const role = await createJobRole(roleData);
 
       const response = await request(app)
-        .post(`/api/job-roles/${role.id}/applications`)
+        .post(`/api/job-roles/${role.id}/apply`)
         .set("Authorization", `Bearer ${userToken}`)
         .send(applicationBody);
 
@@ -215,12 +215,12 @@ describe("POST /api/job-roles/:id/applications", () => {
   it("returns 409 when the USER has already applied for the role", async () => {
     const role = await createJobRole();
     const firstResponse = await request(app)
-      .post(`/api/job-roles/${role.id}/applications`)
+      .post(`/api/job-roles/${role.id}/apply`)
       .set("Authorization", `Bearer ${userToken}`)
       .send(applicationBody);
 
     const duplicateResponse = await request(app)
-      .post(`/api/job-roles/${role.id}/applications`)
+      .post(`/api/job-roles/${role.id}/apply`)
       .set("Authorization", `Bearer ${userToken}`)
       .send(applicationBody);
 
@@ -233,7 +233,7 @@ describe("POST /api/job-roles/:id/applications", () => {
 
   it("returns 400 when the role id is invalid", async () => {
     const response = await request(app)
-      .post("/api/job-roles/not-an-id/applications")
+      .post("/api/job-roles/not-an-id/apply")
       .set("Authorization", `Bearer ${userToken}`)
       .send(applicationBody);
 

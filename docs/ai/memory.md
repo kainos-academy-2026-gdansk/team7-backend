@@ -36,7 +36,7 @@ No secrets, no personal data, no per-ticket noise.
 | GET | `/api/statuses` | list, `{ statusId, statusName }` |
 | POST | `/api/auth/register` | `201`, defaults role to `USER` |
 | POST | `/api/auth/login` | `200` with JWT and user DTO; `401` for invalid credentials |
-| POST | `/api/job-roles/:id/applications` | `USER`-only; `201` creates an `IN_PROGRESS` application; `409` for unavailable or duplicate applications |
+| POST | `/api/job-roles/:id/apply` | `USER`-only; `201` creates an `IN_PROGRESS` application; `409` for unavailable or duplicate applications |
 | GET | `/api/applications` | `USER`-only; `200` returns the authenticated applicant's applications oldest first |
 
 ## Environment
