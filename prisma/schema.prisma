@@ -88,7 +88,7 @@ model Application {
   updatedAt          DateTime @updatedAt
 
   applicant User     @relation(fields: [applicantId], references: [id])
-  jobRole   JobRole  @relation(fields: [jobRoleId], references: [id])
+  jobRole   JobRole  @relation(fields: [jobRoleId], references: [id], onDelete: Cascade)
   status    Status   @relation(fields: [statusId], references: [statusId])
 
   @@unique([applicantId, jobRoleId])

@@ -18,6 +18,8 @@ No secrets, no personal data, no per-ticket noise.
   it requires experience (`VARCHAR(1000)`), salary expectation (`VARCHAR(100)`), and skills
   (`VARCHAR(2000)`). CV/S3 fields and application API behavior remain deferred under
   `US050/US051-database`.
+- Deleting a `JobRole` cascades to its linked `Application` rows at the database level. Confirmation
+  and optional applicant notification belong to the later API/UI workflow, not the database migration.
 
 ## Endpoints (current)
 
@@ -73,3 +75,4 @@ No secrets, no personal data, no per-ticket noise.
 | 2026-08-12 | Initial memory captured while introducing the agentic workflow. | [2026-08-12-us-020-delete-a-role.md](retrospectives/2026-08-12-us-020-delete-a-role.md) |
 | 2026-08-13 | Added authentication endpoints and partial ADMIN authorization for job-role writes. | [2026-08-13-us024-us040-us041-authentication.md](retrospectives/2026-08-13-us024-us040-us041-authentication.md) |
 | 2026-08-13 | Added the application database model and shared application statuses. | [2026-08-13-US050-US051-database.md](retrospectives/2026-08-13-US050-US051-database.md) |
+| 2026-08-13 | JobRole deletion now cascades linked applications. | [2026-08-13-US050-US051-database.md](retrospectives/2026-08-13-US050-US051-database.md) |

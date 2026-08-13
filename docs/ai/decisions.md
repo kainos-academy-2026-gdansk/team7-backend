@@ -173,3 +173,23 @@ status or an Application from referencing a JobRole status.
 
 **Alternatives.** New `ApplicationStatus` enum (rejected: user requested the existing table); separate
 application status table (rejected: unnecessary duplication for the current scope).
+
+---
+
+## ADR-010 · 2026-08-13 · Deleting a JobRole cascades linked applications
+
+**Status:** Accepted
+
+**Context.** US050/US051 permits a recruitment admin to remove a JobRole, and the product decision is
+that all applications connected to that role should be removed as well. The existing application FK
+used `RESTRICT`, which would have exposed an uncontrolled database error from the existing delete path.
+
+**Decision.** Configure `Application.jobRoleId` with `ON DELETE CASCADE`. Keep `Application.applicantId`
+and `Application.statusId` restrictive. The later API/UI workflow must require explicit admin confirmation
+before deletion; optional notifications are a post-commit concern and are outside this database change.
+
+**Consequences.** Role deletion is atomic and cannot leave orphaned applications, but application history
+is permanently removed. A future archive/soft-delete policy would require a deliberate schema change.
+
+**Alternatives.** Keep `RESTRICT` (rejected: deletion fails after applications exist); soft delete/archive
+(deferred: product explicitly chose deletion for this workflow).
