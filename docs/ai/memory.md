@@ -11,6 +11,9 @@ No secrets, no personal data, no per-ticket noise.
 - Consumed by a separate frontend repository; this repo serves JSON only.
 - Core entities: `JobRole` (with `status` OPEN/CLOSED, `responsibilities`), `Band`, `Capability`.
   `JobRole` belongs to one `Band` and one `Capability`. `Band.name` and `Capability.name` are unique.
+- Authentication: `POST /api/auth/register` creates a `USER` with an Argon2 password hash;
+  `POST /api/auth/login` returns a JWT for the `Authorization: Bearer` header. Job-role POST/PUT/DELETE
+  require an `ADMIN` token; GET and reference-data routes remain public by intentional partial scope.
 
 ## Endpoints (current)
 
@@ -25,11 +28,13 @@ No secrets, no personal data, no per-ticket noise.
 | GET | `/api/bands` | list |
 | GET | `/api/capabilities` | list |
 | GET | `/api/statuses` | list, `{ statusId, statusName }` |
+| POST | `/api/auth/register` | `201`, defaults role to `USER` |
+| POST | `/api/auth/login` | `200` with JWT and user DTO; `401` for invalid credentials |
 
 ## Environment
 
-- Node.js 22+, PostgreSQL 16. `.env` holds `DATABASE_URL`, `PORT`, `NODE_ENV`; it is git-ignored and
-  must never be read into chat or logs.
+- Node.js 22+, PostgreSQL 16. `.env` holds `DATABASE_URL`, `PORT`, `NODE_ENV`, and the required
+  `JWT_SECRET`; it is git-ignored and must never be read into chat or logs.
 - `docker compose up -d db` starts PostgreSQL 16 for local development; the API then runs with
   `npm run dev`. The `backend` compose service simulates production and is not used while developing.
 - Route tests need a running Docker daemon — they start a `postgres:16-alpine` Testcontainer.
@@ -50,7 +55,7 @@ No secrets, no personal data, no per-ticket noise.
 
 ## Known gaps / follow-ups
 
-- No authentication or authorisation layer yet — every endpoint is public.
+- Full blanket authentication is still deferred: only job-role write endpoints are protected; GET and reference-data endpoints remain public.
 - No E2E suite; validation stops at route-level integration tests.
 - No `.env.example` in the repository.
 - No pagination or filtering on `GET /api/job-roles`.
@@ -60,3 +65,4 @@ No secrets, no personal data, no per-ticket noise.
 | Date | Entry | Source |
 | ---- | ----- | ------ |
 | 2026-08-12 | Initial memory captured while introducing the agentic workflow. | [2026-08-12-us-020-delete-a-role.md](retrospectives/2026-08-12-us-020-delete-a-role.md) |
+| 2026-08-13 | Added authentication endpoints and partial ADMIN authorization for job-role writes. | [2026-08-13-us024-us040-us041-authentication.md](retrospectives/2026-08-13-us024-us040-us041-authentication.md) |

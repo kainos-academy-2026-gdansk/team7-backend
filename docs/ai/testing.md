@@ -83,3 +83,9 @@ Rules learned the hard way:
 - No E2E layer. Record E2E as **N/A** in handovers.
 - No coverage threshold is enforced in CI; report coverage changes manually if they matter.
 - Container startup dominates suite runtime; keep route tests focused on paths that need a real DB.
+
+## Native and security dependencies
+
+- When adding a native or security-sensitive dependency, verify both `npm ci` in the production image
+  dependency stage and the complete image build. Record package-install success separately from later
+  build failures such as certificate or ORM-engine download errors.

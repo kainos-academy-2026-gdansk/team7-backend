@@ -1,8 +1,20 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Role } from "@prisma/client";
+import argon2 from "argon2";
 
 const prisma = new PrismaClient();
 
 async function main() {
+  const passwordHash = await argon2.hash("Admin!123");
+  await prisma.user.upsert({
+    where: { email: "admin@kainos.local" },
+    update: {},
+    create: {
+      email: "admin@kainos.local",
+      passwordHash,
+      role: Role.ADMIN,
+    },
+  });
+
   await prisma.band.createMany({
     data: [
       { name: "Apprentice" },

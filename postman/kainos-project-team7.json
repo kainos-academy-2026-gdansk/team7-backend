@@ -1,741 +1,124 @@
 {
   "info": {
     "_postman_id": "e80c96b4-de79-4325-bfae-b39ff88ac5a0",
-    "name": "kainos-project-team7",
+    "name": "Kainos Team 7 Backend",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "56957097"
+    "description": "Login requests store the JWT in token. Create job role stores its id in id."
   },
   "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:3000",
-      "type": "string"
-    },
-    {
-      "key": "jobRoleId",
-      "value": "1",
-      "type": "string"
-    }
+    { "key": "baseURL", "value": "http://localhost:3000", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "id", "value": "1", "type": "string" }
   ],
   "item": [
     {
-      "name": "general",
+      "name": "General",
       "item": [
         {
-          "name": "health - 200",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"reports UP\", () => pm.expect(pm.response.json().status).to.eql(\"UP\"));"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/health",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "health"
-              ]
-            }
-          },
+          "name": "Health - 200",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));", "pm.test('reports UP', () => pm.expect(pm.response.json().status).to.eql('UP'));" ] } }],
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseURL}}/health", "host": ["{{baseURL}}"], "path": ["health"] } },
           "response": []
         }
       ]
     },
     {
-      "name": "JobRole",
+      "name": "Authentication",
       "item": [
         {
-          "name": "getAll",
-          "item": [
-            {
-              "name": "getAll - 200",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
-                      "pm.test(\"returns an array\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));",
-                      "pm.test(\"status is a name, not an id\", () => {",
-                      "  const [first] = pm.response.json();",
-                      "  if (first) pm.expect(first.status).to.be.a(\"string\");",
-                      "});"
-                    ]
-                  }
-                }
-              ],
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": "{{baseUrl}}/api/job-roles",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "job-roles"
-                  ]
-                },
-                "description": "Summary shape: id, roleName, location, capability, band, closingDate, status (name)."
-              },
-              "response": []
-            }
-          ]
+          "name": "Register USER - 201",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 201', () => pm.response.to.have.status(201));", "pm.test('returns a USER without passwordHash', () => { const body = pm.response.json(); pm.expect(body.role).to.eql('USER'); pm.expect(body).not.to.have.property('passwordHash'); });"] } }],
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"applicant.{{$timestamp}}@example.com\",\n  \"password\": \"Password!\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/auth/register", "host": ["{{baseURL}}"], "path": ["api", "auth", "register"] } },
+          "response": []
         },
         {
-          "name": "getByID",
-          "item": [
-            {
-              "name": "getByID - 200",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
-                      "pm.test(\"exposes the renamed fields\", () => {",
-                      "  const body = pm.response.json();",
-                      "  pm.expect(body).to.have.property(\"sharepointUrl\");",
-                      "  pm.expect(body).to.have.property(\"numberOfOpenPositions\");",
-                      "  pm.expect(body.status).to.be.a(\"string\");",
-                      "});"
-                    ]
-                  }
-                }
-              ],
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": "{{baseUrl}}/api/job-roles/{{jobRoleId}}",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "job-roles",
-                    "{{jobRoleId}}"
-                  ]
-                },
-                "description": "Detailed shape: id, jobRoleName, description, responsibilities, sharepointUrl, location, capability, band, closingDate, status (name), numberOfOpenPositions."
-              },
-              "response": []
-            },
-            {
-              "name": "getByID - 400",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"status is 400\", () => pm.response.to.have.status(400));",
-                      "pm.test(\"reports the id field\", () => pm.expect(pm.response.json().errors[0].field).to.eql(\"id\"));"
-                    ]
-                  }
-                }
-              ],
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": "{{baseUrl}}/api/job-roles/abc",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "job-roles",
-                    "abc"
-                  ]
-                }
-              },
-              "response": []
-            },
-            {
-              "name": "getByID - 404",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"status is 404\", () => pm.response.to.have.status(404));",
-                      "pm.test(\"returns the not found message\", () => pm.expect(pm.response.json().message).to.eql(\"Job role not found\"));"
-                    ]
-                  }
-                }
-              ],
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": "{{baseUrl}}/api/job-roles/9999",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "job-roles",
-                    "9999"
-                  ]
-                }
-              },
-              "response": []
-            }
-          ]
+          "name": "Register invalid email - 400",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 400', () => pm.response.to.have.status(400));"] } }],
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"not-an-email\",\n  \"password\": \"Password!\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/auth/register", "host": ["{{baseURL}}"], "path": ["api", "auth", "register"] } },
+          "response": []
         },
         {
-          "name": "addJobRole",
-          "item": [
-            {
-              "name": "addJobRole - 201",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
-                      "pm.test(\"is always created as OPEN\", () => pm.expect(pm.response.json().status).to.eql(\"OPEN\"));"
-                    ]
-                  }
-                }
-              ],
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"roleName\": \"Data Engineer\",\n  \"location\": \"Warsaw\",\n  \"bandId\": 1,\n  \"capabilityId\": 1,\n  \"description\": \"Builds data pipelines\",\n  \"responsibilities\": \"Designs ETL jobs\",\n  \"numberOfOpenPositions\": 2,\n  \"sharepointUrl\": \"https://example.com/role/new\",\n  \"closingDate\": \"2026-11-30T00:00:00.000Z\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                },
-                "url": {
-                  "raw": "{{baseUrl}}/api/job-roles",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "job-roles"
-                  ]
-                },
-                "description": "The status is never accepted from the client — new roles are always created as OPEN."
-              },
-              "response": []
-            },
-            {
-              "name": "addJobRole - 400 missing required field",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"status is 400\", () => pm.response.to.have.status(400));",
-                      "pm.test(\"reports roleName\", () => pm.expect(pm.response.json().errors.map(e => e.field)).to.include(\"roleName\"));"
-                    ]
-                  }
-                }
-              ],
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"location\": \"Warsaw\",\n  \"bandId\": 1,\n  \"capabilityId\": 1\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                },
-                "url": {
-                  "raw": "{{baseUrl}}/api/job-roles",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "job-roles"
-                  ]
-                }
-              },
-              "response": []
-            },
-            {
-              "name": "addJobRole - 400 unknown field",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
-                    ]
-                  }
-                }
-              ],
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"roleName\": \"Data Engineer\",\n  \"location\": \"Warsaw\",\n  \"bandId\": 1,\n  \"capabilityId\": 1,\n  \"openPositions\": 2,\n  \"sharePointLink\": \"https://example.com/role/legacy\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                },
-                "url": {
-                  "raw": "{{baseUrl}}/api/job-roles",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "job-roles"
-                  ]
-                },
-                "description": "The schema is strict. The pre-rename names openPositions / sharePointLink, and any status field, are rejected rather than ignored."
-              },
-              "response": []
-            }
-          ]
+          "name": "Register weak password - 400",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 400', () => pm.response.to.have.status(400));"] } }],
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"applicant@example.com\",\n  \"password\": \"password\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/auth/register", "host": ["{{baseURL}}"], "path": ["api", "auth", "register"] } },
+          "response": []
         },
         {
-          "name": "updateJobRole",
-          "item": [
-            {
-              "name": "updateJobRole - 200",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
-                      "pm.test(\"returns the detailed shape\", () => {",
-                      "  const body = pm.response.json();",
-                      "  pm.expect(body).to.have.property(\"jobRoleName\");",
-                      "  pm.expect(body.status).to.be.a(\"string\");",
-                      "});"
-                    ]
-                  }
-                }
-              ],
-              "request": {
-                "method": "PUT",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"jobRoleName\": \"Lead Software Engineer\",\n  \"location\": \"Belfast\",\n  \"statusId\": 1,\n  \"bandName\": \"Consultant\",\n  \"capabilityName\": \"Testing\",\n  \"description\": \"Leads delivery teams.\",\n  \"responsibilities\": \"Owns technical direction.\",\n  \"sharepointUrl\": \"https://example.com/role/updated\",\n  \"numberOfOpenPositions\": 7,\n  \"closingDate\": \"2027-01-31T23:59:59.000Z\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                },
-                "url": {
-                  "raw": "{{baseUrl}}/api/job-roles/{{jobRoleId}}",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "job-roles",
-                    "{{jobRoleId}}"
-                  ]
-                },
-                "description": "Full update, strict schema: every key is required. statusId comes from GET /api/statuses; band and capability are passed by name."
-              },
-              "response": []
-            },
-            {
-              "name": "updateJobRole - 400 unknown statusId",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"status is 400\", () => pm.response.to.have.status(400));",
-                      "pm.test(\"reports statusId\", () => pm.expect(pm.response.json().errors.map(e => e.field)).to.include(\"statusId\"));"
-                    ]
-                  }
-                }
-              ],
-              "request": {
-                "method": "PUT",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"jobRoleName\": \"Lead Software Engineer\",\n  \"location\": \"Belfast\",\n  \"statusId\": 9999,\n  \"bandName\": \"Consultant\",\n  \"capabilityName\": \"Testing\",\n  \"description\": \"Leads delivery teams.\",\n  \"responsibilities\": \"Owns technical direction.\",\n  \"sharepointUrl\": \"https://example.com/role/updated\",\n  \"numberOfOpenPositions\": 7,\n  \"closingDate\": \"2027-01-31T23:59:59.000Z\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                },
-                "url": {
-                  "raw": "{{baseUrl}}/api/job-roles/{{jobRoleId}}",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "job-roles",
-                    "{{jobRoleId}}"
-                  ]
-                }
-              },
-              "response": []
-            },
-            {
-              "name": "updateJobRole - 400 validation",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
-                    ]
-                  }
-                }
-              ],
-              "request": {
-                "method": "PUT",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"jobRoleName\": \"\",\n  \"location\": \"Belfast\",\n  \"statusId\": 1,\n  \"bandName\": \"Consultant\",\n  \"capabilityName\": \"Testing\",\n  \"description\": null,\n  \"responsibilities\": null,\n  \"sharepointUrl\": \"not-a-url\",\n  \"numberOfOpenPositions\": -1,\n  \"closingDate\": null\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                },
-                "url": {
-                  "raw": "{{baseUrl}}/api/job-roles/{{jobRoleId}}",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "job-roles",
-                    "{{jobRoleId}}"
-                  ]
-                }
-              },
-              "response": []
-            },
-            {
-              "name": "updateJobRole - 404",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"status is 404\", () => pm.response.to.have.status(404));"
-                    ]
-                  }
-                }
-              ],
-              "request": {
-                "method": "PUT",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"jobRoleName\": \"Lead Software Engineer\",\n  \"location\": \"Belfast\",\n  \"statusId\": 1,\n  \"bandName\": \"Consultant\",\n  \"capabilityName\": \"Testing\",\n  \"description\": \"Leads delivery teams.\",\n  \"responsibilities\": \"Owns technical direction.\",\n  \"sharepointUrl\": \"https://example.com/role/updated\",\n  \"numberOfOpenPositions\": 7,\n  \"closingDate\": \"2027-01-31T23:59:59.000Z\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                },
-                "url": {
-                  "raw": "{{baseUrl}}/api/job-roles/9999",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "job-roles",
-                    "9999"
-                  ]
-                }
-              },
-              "response": []
-            }
-          ]
+          "name": "Register client-supplied role - 400",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 400', () => pm.response.to.have.status(400));"] } }],
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"applicant@example.com\",\n  \"password\": \"Password!\",\n  \"role\": \"ADMIN\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/auth/register", "host": ["{{baseURL}}"], "path": ["api", "auth", "register"] } },
+          "response": []
         },
         {
-          "name": "deleteJobRole",
-          "item": [
-            {
-              "name": "deleteJobRole - 204",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"status is 204\", () => pm.response.to.have.status(204));",
-                      "pm.test(\"body is empty\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
-                    ]
-                  }
-                }
-              ],
-              "request": {
-                "method": "DELETE",
-                "header": [],
-                "url": {
-                  "raw": "{{baseUrl}}/api/job-roles/{{jobRoleId}}",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "job-roles",
-                    "{{jobRoleId}}"
-                  ]
-                }
-              },
-              "response": []
-            },
-            {
-              "name": "deleteJobRole - 400",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
-                    ]
-                  }
-                }
-              ],
-              "request": {
-                "method": "DELETE",
-                "header": [],
-                "url": {
-                  "raw": "{{baseUrl}}/api/job-roles/abc",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "job-roles",
-                    "abc"
-                  ]
-                }
-              },
-              "response": []
-            },
-            {
-              "name": "deleteJobRole - 404",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"status is 404\", () => pm.response.to.have.status(404));"
-                    ]
-                  }
-                }
-              ],
-              "request": {
-                "method": "DELETE",
-                "header": [],
-                "url": {
-                  "raw": "{{baseUrl}}/api/job-roles/9999",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "job-roles",
-                    "9999"
-                  ]
-                }
-              },
-              "response": []
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Band",
-      "item": [
+          "name": "Register duplicate email - 400",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 400', () => pm.response.to.have.status(400));", "pm.test('reports email', () => pm.expect(pm.response.json().errors[0].field).to.eql('email'));" ] } }],
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@kainos.local\",\n  \"password\": \"Password!\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/auth/register", "host": ["{{baseURL}}"], "path": ["api", "auth", "register"] }, "description": "Run npx prisma db seed first." },
+          "response": []
+        },
         {
-          "name": "getAll - 200",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"returns id and name\", () => {",
-                  "  const [first] = pm.response.json();",
-                  "  if (first) pm.expect(first).to.have.all.keys(\"id\", \"name\");",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/bands",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "bands"
-              ]
-            }
-          },
+          "name": "Login ADMIN - 200 (sets token)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));", "pm.test('stores ADMIN token', () => { const body = pm.response.json(); pm.expect(body.user.role).to.eql('ADMIN'); pm.collectionVariables.set('token', body.token); });"] } }],
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@kainos.local\",\n  \"password\": \"Admin!123\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/auth/login", "host": ["{{baseURL}}"], "path": ["api", "auth", "login"] }, "description": "Run npx prisma db seed first. This stores the JWT in token." },
+          "response": []
+        },
+        {
+          "name": "Login USER - 200 (sets token)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));", "pm.collectionVariables.set('token', pm.response.json().token);"] } }],
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"replace-with-a-registered-user@example.com\",\n  \"password\": \"Password!\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/auth/login", "host": ["{{baseURL}}"], "path": ["api", "auth", "login"] }, "description": "Replace the email with a USER created by Register USER. Used before 403 scenarios." },
+          "response": []
+        },
+        {
+          "name": "Login invalid password - 401",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 401', () => pm.response.to.have.status(401));", "pm.test('uses generic message', () => pm.expect(pm.response.json().message).to.eql('Invalid email or password'));" ] } }],
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@kainos.local\",\n  \"password\": \"WrongPassword!\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/auth/login", "host": ["{{baseURL}}"], "path": ["api", "auth", "login"] } },
+          "response": []
+        },
+        {
+          "name": "Login unknown email - 401",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 401', () => pm.response.to.have.status(401));"] } }],
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"unknown@example.com\",\n  \"password\": \"Password!\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/auth/login", "host": ["{{baseURL}}"], "path": ["api", "auth", "login"] } },
+          "response": []
+        },
+        {
+          "name": "Login invalid input - 400",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 400', () => pm.response.to.have.status(400));"] } }],
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"not-an-email\",\n  \"password\": \"\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/auth/login", "host": ["{{baseURL}}"], "path": ["api", "auth", "login"] } },
           "response": []
         }
       ]
     },
     {
-      "name": "Capability",
+      "name": "Public Reads",
       "item": [
-        {
-          "name": "getAll - 200",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"returns id and name\", () => {",
-                  "  const [first] = pm.response.json();",
-                  "  if (first) pm.expect(first).to.have.all.keys(\"id\", \"name\");",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/capabilities",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "capabilities"
-              ]
-            }
-          },
-          "response": []
-        }
+        { "name": "List bands - 200", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] } }], "request": { "method": "GET", "header": [], "url": { "raw": "{{baseURL}}/api/bands", "host": ["{{baseURL}}"], "path": ["api", "bands"] } }, "response": [] },
+        { "name": "List capabilities - 200", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] } }], "request": { "method": "GET", "header": [], "url": { "raw": "{{baseURL}}/api/capabilities", "host": ["{{baseURL}}"], "path": ["api", "capabilities"] } }, "response": [] },
+        { "name": "List statuses - 200", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] } }], "request": { "method": "GET", "header": [], "url": { "raw": "{{baseURL}}/api/statuses", "host": ["{{baseURL}}"], "path": ["api", "statuses"] } }, "response": [] },
+        { "name": "List job roles - 200", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] } }], "request": { "method": "GET", "header": [], "url": { "raw": "{{baseURL}}/api/job-roles", "host": ["{{baseURL}}"], "path": ["api", "job-roles"] } }, "response": [] },
+        { "name": "Get job role by id - 200", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));", "pm.test('returns selected id', () => pm.expect(pm.response.json().id).to.eql(Number(pm.variables.get('id'))));"] } }], "request": { "method": "GET", "header": [], "url": { "raw": "{{baseURL}}/api/job-roles/{{id}}", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "{{id}}"] } }, "response": [] },
+        { "name": "Get job role invalid id - 400", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 400', () => pm.response.to.have.status(400));"] } }], "request": { "method": "GET", "header": [], "url": { "raw": "{{baseURL}}/api/job-roles/invalid", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "invalid"] } }, "response": [] },
+        { "name": "Get missing job role - 404", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 404', () => pm.response.to.have.status(404));"] } }], "request": { "method": "GET", "header": [], "url": { "raw": "{{baseURL}}/api/job-roles/999999", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "999999"] } }, "response": [] }
       ]
     },
     {
-      "name": "Status",
+      "name": "Protected Job Role Writes",
       "item": [
-        {
-          "name": "getAll - 200",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"returns statusId and statusName\", () => {",
-                  "  const [first] = pm.response.json();",
-                  "  if (first) pm.expect(first).to.have.all.keys(\"statusId\", \"statusName\");",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/statuses",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "statuses"
-              ]
-            },
-            "description": "Source of the statusId values accepted by PUT /api/job-roles/:id."
-          },
-          "response": []
-        }
+        { "name": "Create without token - 401", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 401', () => pm.response.to.have.status(401));"] } }], "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/job-roles", "host": ["{{baseURL}}"], "path": ["api", "job-roles"] } }, "response": [] },
+        { "name": "Create invalid token - 401", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 401', () => pm.response.to.have.status(401));"] } }], "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer invalid-token" }], "body": { "mode": "raw", "raw": "{}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/job-roles", "host": ["{{baseURL}}"], "path": ["api", "job-roles"] } }, "response": [] },
+        { "name": "Create with USER token - 403", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 403', () => pm.response.to.have.status(403));"] } }], "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "body": { "mode": "raw", "raw": "{}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/job-roles", "host": ["{{baseURL}}"], "path": ["api", "job-roles"] }, "description": "Run Login USER first." }, "response": [] },
+        { "name": "Create with ADMIN token - 201 (sets id)", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 201', () => pm.response.to.have.status(201));", "pm.collectionVariables.set('id', String(pm.response.json().id));"] } }], "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "body": { "mode": "raw", "raw": "{\n  \"roleName\": \"Postman Data Engineer\",\n  \"location\": \"Warsaw\",\n  \"bandId\": 1,\n  \"capabilityId\": 1\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/job-roles", "host": ["{{baseURL}}"], "path": ["api", "job-roles"] }, "description": "Run Login ADMIN first. Saves the created id." }, "response": [] },
+        { "name": "Create invalid body with ADMIN token - 400", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 400', () => pm.response.to.have.status(400));"] } }], "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "body": { "mode": "raw", "raw": "{\n  \"location\": \"Warsaw\",\n  \"bandId\": 1,\n  \"capabilityId\": 1\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/job-roles", "host": ["{{baseURL}}"], "path": ["api", "job-roles"] } }, "response": [] },
+        { "name": "Create unknown fields with ADMIN token - 400", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 400', () => pm.response.to.have.status(400));"] } }], "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "body": { "mode": "raw", "raw": "{\n  \"roleName\": \"Data Engineer\",\n  \"location\": \"Warsaw\",\n  \"bandId\": 1,\n  \"capabilityId\": 1,\n  \"openPositions\": 2\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/job-roles", "host": ["{{baseURL}}"], "path": ["api", "job-roles"] } }, "response": [] },
+        { "name": "Update without token - 401", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 401', () => pm.response.to.have.status(401));"] } }], "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/job-roles/{{id}}", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "{{id}}"] } }, "response": [] },
+        { "name": "Update with USER token - 403", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 403', () => pm.response.to.have.status(403));"] } }], "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "body": { "mode": "raw", "raw": "{}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/job-roles/{{id}}", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "{{id}}"] }, "description": "Run Login USER first." }, "response": [] },
+        { "name": "Update with ADMIN token - 200", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] } }], "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "body": { "mode": "raw", "raw": "{\n  \"jobRoleName\": \"Postman Lead Data Engineer\",\n  \"location\": \"Belfast\",\n  \"statusId\": 1,\n  \"bandName\": \"Consultant\",\n  \"capabilityName\": \"Testing\",\n  \"description\": null,\n  \"responsibilities\": null,\n  \"sharepointUrl\": null,\n  \"numberOfOpenPositions\": null,\n  \"closingDate\": null\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/job-roles/{{id}}", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "{{id}}"] }, "description": "Run Login ADMIN first." }, "response": [] },
+        { "name": "Update invalid body with ADMIN token - 400", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 400', () => pm.response.to.have.status(400));"] } }], "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "body": { "mode": "raw", "raw": "{\n  \"jobRoleName\": \"\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/job-roles/{{id}}", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "{{id}}"] } }, "response": [] },
+        { "name": "Update invalid id with ADMIN token - 400", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 400', () => pm.response.to.have.status(400));"] } }], "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "body": { "mode": "raw", "raw": "{}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/job-roles/invalid", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "invalid"] } }, "response": [] },
+        { "name": "Update missing job role with ADMIN token - 404", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 404', () => pm.response.to.have.status(404));"] } }], "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "body": { "mode": "raw", "raw": "{\n  \"jobRoleName\": \"Missing\",\n  \"location\": \"Belfast\",\n  \"statusId\": 1,\n  \"bandName\": \"Consultant\",\n  \"capabilityName\": \"Testing\",\n  \"description\": null,\n  \"responsibilities\": null,\n  \"sharepointUrl\": null,\n  \"numberOfOpenPositions\": null,\n  \"closingDate\": null\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/job-roles/999999", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "999999"] } }, "response": [] },
+        { "name": "Delete without token - 401", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 401', () => pm.response.to.have.status(401));"] } }], "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseURL}}/api/job-roles/{{id}}", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "{{id}}"] } }, "response": [] },
+        { "name": "Delete with USER token - 403", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 403', () => pm.response.to.have.status(403));"] } }], "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseURL}}/api/job-roles/{{id}}", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "{{id}}"] }, "description": "Run Login USER first." }, "response": [] },
+        { "name": "Delete invalid id with ADMIN token - 400", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 400', () => pm.response.to.have.status(400));"] } }], "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseURL}}/api/job-roles/invalid", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "invalid"] } }, "response": [] },
+        { "name": "Delete with ADMIN token - 204", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 204', () => pm.response.to.have.status(204));", "pm.test('body is empty', () => pm.expect(pm.response.text()).to.eql(''));" ] } }], "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseURL}}/api/job-roles/{{id}}", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "{{id}}"] }, "description": "Run Login ADMIN first. This deletes id." }, "response": [] },
+        { "name": "Delete missing job role with ADMIN token - 404", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 404', () => pm.response.to.have.status(404));"] } }], "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseURL}}/api/job-roles/999999", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "999999"] } }, "response": [] }
       ]
     }
   ]
