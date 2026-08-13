@@ -4,13 +4,13 @@
 | ---- | ---- |
 | **Story** | `US050-US053` — Apply for a role and view my job applications |
 | **Date** | 2026-08-13 |
-| **Branch / PR** | `dev` / not opened |
+| **Branch / PR** | `US051/US052-application` / not opened |
 | **Agents used** | plan-user-story / deliver-user-story |
 | **Developer** | Not recorded |
 
 ## What was delivered
 
-Added the applicant application API without changing the existing Prisma schema or adding dependencies. `POST /api/job-roles/:id/applications` now accepts experience, salary expectation, and skills for authenticated `USER` accounts, verifies an `OPEN` role with available positions, creates an `IN_PROGRESS` application, and rejects duplicates. `GET /api/applications` returns only the authenticated applicant's applications, including role information, submitted fields, status, timestamps, and oldest-first ordering. DTO, model, mapper, service, controller, router, app wiring, unit tests, PostgreSQL route tests, and a sequenced Postman collection folder were added. CV upload, S3 storage, and all admin application assessment behavior are outside this delivery scope.
+Added the applicant application API without changing the existing Prisma schema or adding dependencies. `POST /api/job-roles/:id/applications` now accepts experience, salary expectation, and skills for authenticated `USER` accounts, verifies an `OPEN` role with available positions, creates an `IN_PROGRESS` application, and rejects duplicates. `GET /api/applications` returns only the authenticated applicant's applications, including role information, submitted fields, status, timestamps, and oldest-first ordering. DTO, model, mapper, service, controller, router, app wiring, unit tests, PostgreSQL route tests, and manual Postman verification were completed. The updated Postman collection folder was not included in the dedicated branch commit. CV upload, S3 storage, and all admin application assessment behavior are outside this delivery scope.
 
 ## Validation results
 
@@ -31,7 +31,7 @@ Added the applicant application API without changing the existing Prisma schema 
 - The implementation stayed within the established layered architecture and reused the existing authentication, validation, shared status lookup, and Testcontainer conventions.
 - The service uses status names rather than environment-dependent numeric IDs and translates both pre-existing and concurrent duplicate applications into `409` responses.
 - Route tests exercised the real migration chain and database behavior, including user isolation, role eligibility, duplicate protection, and persisted `IN_PROGRESS` status.
-- The Postman collection now creates its own test users and roles, captures IDs dynamically, and covers the main success and failure paths in an executable order.
+- Manual Postman verification covered the main success and failure paths, including dynamic test users, role eligibility, duplicate protection, authorization, user isolation, and oldest-first listing.
 
 ## What went wrong
 
@@ -57,7 +57,7 @@ There was one planning handoff with multiple clarification rounds, followed by o
 | 2 | Test cases that depend on database-derived IDs must resolve those values inside the test body or a runtime setup helper, not in top-level parameterized data. | `testing.md` | Accepted |
 | 3 | Validate structured artifacts such as Postman collections with their native parser immediately after every mechanical edit. | `testing.md` | Accepted |
 
-A lesson qualifies only if it is durable, actionable, and general. Please mark each candidate `Accepted` or `Rejected` before memory is updated.
+A lesson qualifies only if it is durable, actionable, and general. All three lessons were accepted and applied to `docs/ai/testing.md`.
 
 ## Proposed memory diff
 
@@ -72,7 +72,7 @@ A lesson qualifies only if it is durable, actionable, and general. Please mark e
 +  applications oldest first. CV/S3 storage remains deferred.
 ```
 
-The application fact below remains pending because the developer has not yet explicitly approved the `docs/ai/memory.md` diff. The three accepted testing lessons have been applied to `docs/ai/testing.md`.
+The developer approved the application fact and the three testing lessons. The memory and testing updates have been applied.
 
 ```diff
 --- a/docs/ai/testing.md

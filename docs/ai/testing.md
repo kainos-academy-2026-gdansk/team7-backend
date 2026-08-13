@@ -75,8 +75,14 @@ Rules learned the hard way:
 - Assert behaviour, not implementation details: status codes, response bodies, persisted rows.
 - Test names read as sentences: `"returns 404 when the job role does not exist"`.
 - Use `it.each([...])` for field-by-field validation cases (already used in the DTO and middleware tests).
+- When mocking Prisma relations, match the exact nested shape produced by the service's `select` or
+  `include` query, for example `status: { statusName: "OPEN" }` rather than a flat `statusName` field.
+- Resolve database-derived IDs inside test bodies or runtime setup helpers; do not capture values from
+  `beforeAll` in top-level `it.each` data because the cases are evaluated before setup runs.
 - Never delete or `skip` a test to make the suite green. A red test is a finding for the handover.
 - Do not assert version-specific Zod internals; assert `field` and `message` from `toFieldErrors`.
+- Validate structured manual-test artifacts such as Postman collections with a native JSON validator
+  immediately after edits and before manual API verification.
 
 ## Known gaps
 
