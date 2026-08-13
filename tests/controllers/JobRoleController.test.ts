@@ -29,12 +29,12 @@ const jobRoleDetailedMock: JobRoleDetailed = {
   jobRoleName: "Software Engineer",
   description: "Builds things",
   responsibilities: "Writes code",
-  link: "https://example.com/role/1",
+  sharepointUrl: "https://example.com/role/1",
   location: "Gdansk",
   capability: { id: 5, name: "Engineering" },
   band: { id: 2, name: "Senior Associate" },
   closingDate: new Date("2026-12-31T00:00:00.000Z"),
-  status: "OPEN",
+  status: { statusId: 1, statusName: "OPEN" },
   numberOfOpenPositions: 3,
 };
 
@@ -43,7 +43,7 @@ const jobRoleDetailedDtoMock: JobRoleDetailedDTO = {
   jobRoleName: "Software Engineer",
   description: "Builds things",
   responsibilities: "Writes code",
-  link: "https://example.com/role/1",
+  sharepointUrl: "https://example.com/role/1",
   location: "Gdansk",
   capability: "Engineering",
   band: "Senior Associate",
@@ -59,6 +59,7 @@ const jobRoleListMock = [
     closingDate: new Date("2026-08-31T00:00:00.000Z"),
     band: { name: "Associate" },
     capability: { name: "Engineering" },
+    status: { statusName: "OPEN" },
   },
   {
     roleName: "Back-End Engineer",
@@ -66,6 +67,7 @@ const jobRoleListMock = [
     closingDate: null,
     band: { name: "Associate" },
     capability: { name: "Engineering" },
+    status: { statusName: "CLOSED" },
   },
 ];
 
@@ -76,6 +78,7 @@ const jobRoleListDtoMock = [
     capability: "Engineering",
     band: "Associate",
     closingDate: "2026-08-31T00:00:00.000Z",
+    status: "OPEN",
   },
   {
     roleName: "Back-End Engineer",
@@ -83,6 +86,7 @@ const jobRoleListDtoMock = [
     capability: "Engineering",
     band: "Associate",
     closingDate: null,
+    status: "CLOSED",
   },
 ];
 
@@ -91,15 +95,16 @@ const createdJobRoleRecordMock: JobRoleWithRelations = {
   roleName: "Data Engineer",
   location: "Warsaw",
   closingDate: new Date("2026-11-30T00:00:00.000Z"),
-  status: "OPEN",
+  statusId: 1,
   description: "Builds data pipelines",
   responsibilities: "Designs ETL jobs",
-  openPositions: 2,
-  sharePointLink: "https://example.com/role/10",
+  numberOfOpenPositions: 2,
+  sharepointUrl: "https://example.com/role/10",
   bandId: 2,
   capabilityId: 5,
   band: { id: 2, name: "Senior Associate" },
   capability: { id: 5, name: "Engineering" },
+  status: { statusId: 1, statusName: "OPEN" },
   createdAt: new Date("2026-01-03T00:00:00.000Z"),
   updatedAt: new Date("2026-01-03T00:00:00.000Z"),
 };
@@ -113,21 +118,21 @@ const addJobRoleResponseDtoMock: AddJobRoleResponseDto = {
   capability: "Engineering",
   description: "Builds data pipelines",
   responsibilities: "Designs ETL jobs",
-  openPositions: 2,
-  sharePointLink: "https://example.com/role/10",
+  numberOfOpenPositions: 2,
+  sharepointUrl: "https://example.com/role/10",
   closingDate: "2026-11-30T00:00:00.000Z",
 };
 
 const updateJobRoleDtoMock: UpdateJobRoleRequestDTO = {
   jobRoleName: "Software Engineer",
   location: "Gdansk",
-  status: "OPEN",
+  statusId: 1,
   bandName: "Senior Associate",
   capabilityName: "Engineering",
   description: "Builds things",
   responsibilities: "Writes code",
-  sharePointLink: "https://example.com/role/1",
-  openPositions: 3,
+  sharepointUrl: "https://example.com/role/1",
+  numberOfOpenPositions: 3,
   closingDate: "2026-12-31T00:00:00.000Z",
 };
 
@@ -229,8 +234,8 @@ describe("JobRoleController", () => {
           capabilityId: 5,
           description: "Builds data pipelines",
           responsibilities: "Designs ETL jobs",
-          openPositions: 2,
-          sharePointLink: "https://example.com/role/10",
+          numberOfOpenPositions: 2,
+          sharepointUrl: "https://example.com/role/10",
           closingDate: new Date("2026-11-30T00:00:00.000Z"),
         },
       } as unknown as Request;
@@ -251,8 +256,8 @@ describe("JobRoleController", () => {
           capabilityId: 5,
           description: null,
           responsibilities: null,
-          openPositions: 0,
-          sharePointLink: null,
+          numberOfOpenPositions: 0,
+          sharepointUrl: null,
           closingDate: null,
         },
       } as unknown as Request;
@@ -260,8 +265,8 @@ describe("JobRoleController", () => {
         ...createdJobRoleRecordMock,
         description: null,
         responsibilities: null,
-        openPositions: 0,
-        sharePointLink: null,
+        numberOfOpenPositions: 0,
+        sharepointUrl: null,
         closingDate: null,
       });
 
@@ -308,8 +313,8 @@ describe("JobRoleController", () => {
         ...updateJobRoleDtoMock,
         description: null,
         responsibilities: null,
-        sharePointLink: null,
-        openPositions: null,
+        sharepointUrl: null,
+        numberOfOpenPositions: null,
         closingDate: null,
       };
       req = { params: { id: "1" }, body: bodyWithNulls } as unknown as Request;

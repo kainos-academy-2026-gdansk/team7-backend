@@ -24,6 +24,7 @@ No secrets, no personal data, no per-ticket noise.
 | DELETE | `/api/job-roles/:id` | `204` empty body / `404` |
 | GET | `/api/bands` | list |
 | GET | `/api/capabilities` | list |
+| GET | `/api/statuses` | list, `{ statusId, statusName }` |
 
 ## Environment
 
@@ -41,6 +42,9 @@ No secrets, no personal data, no per-ticket noise.
 - `src/Dto/` is capitalised (not `dto/` or `dtos/`). Filenames are PascalCase matching the export.
 - Validation middleware validates but **does not** mutate `req`, so controllers still do
   `Number(req.params.id)` after `validateParams(idParamSchema)`.
+- `Status` rows (`OPEN`, `CLOSED`) are owned by migration `20260812120000_job_role_status_table`.
+  `prisma/seed.ts` reads them and fails loudly if they are missing — it must never create them, or
+  the same status name ends up with different `statusId` values per environment.
 - Services take `PrismaClient` through the constructor; wiring happens in the router file.
 - There is no `vitest.config.ts`; Vitest config lives under the `vitest` key in `package.json`.
 

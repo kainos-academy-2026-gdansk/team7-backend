@@ -1,4 +1,4 @@
-import type { Band, Capability, JobRole } from "@prisma/client";
+import type { Band, Capability, JobRole, Status } from "@prisma/client";
 import type {
   AddJobRoleResponseDto,
   JobRoleAllResponseDto,
@@ -17,7 +17,7 @@ export class JobRoleMapper {
       capability: role.capability.name,
       band: role.band.name,
       closingDate: role.closingDate ? role.closingDate.toISOString() : null,
-      status: role.status,
+      status: role.status.statusName,
     };
   }
   static toJobRoleDetailedDto(jobRoleDetailed: JobRoleDetailed): JobRoleDetailedDTO {
@@ -26,30 +26,30 @@ export class JobRoleMapper {
       jobRoleName: jobRoleDetailed.jobRoleName,
       description: jobRoleDetailed.description,
       responsibilities: jobRoleDetailed.responsibilities,
-      link: jobRoleDetailed.link,
+      sharepointUrl: jobRoleDetailed.sharepointUrl,
       location: jobRoleDetailed.location,
       capability: jobRoleDetailed.capability.name,
       band: jobRoleDetailed.band.name,
       closingDate: jobRoleDetailed.closingDate ? jobRoleDetailed.closingDate.toISOString() : null,
-      status: jobRoleDetailed.status,
+      status: jobRoleDetailed.status.statusName,
       numberOfOpenPositions: jobRoleDetailed.numberOfOpenPositions,
     };
   }
 
   static toAddJobRoleResponseDto(
-    role: JobRole & { band: Band; capability: Capability },
+    role: JobRole & { band: Band; capability: Capability; status: Status },
   ): AddJobRoleResponseDto {
     return {
       id: role.id,
       roleName: role.roleName,
       location: role.location,
-      status: role.status,
+      status: role.status.statusName,
       band: role.band.name,
       capability: role.capability.name,
       description: role.description,
       responsibilities: role.responsibilities,
-      openPositions: role.openPositions,
-      sharePointLink: role.sharePointLink,
+      numberOfOpenPositions: role.numberOfOpenPositions,
+      sharepointUrl: role.sharepointUrl,
       closingDate: role.closingDate ? role.closingDate.toISOString() : null,
     };
   }

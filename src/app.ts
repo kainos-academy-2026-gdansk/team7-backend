@@ -5,6 +5,7 @@ import morganMiddleware from "./middlewares/morganMiddleware";
 import bandRouter from "./routes/BandRouter";
 import capabilityRouter from "./routes/CapabilityRouter";
 import jobRoleRouter from "./routes/JobRoleRouter";
+import statusRouter from "./routes/StatusRouter";
 const app = express();
 
 app.use(express.json());
@@ -16,6 +17,7 @@ app.get("/health", (_req: Request, res: Response) => {
 });
 app.use("/api/bands", bandRouter);
 app.use("/api/capabilities", capabilityRouter);
+app.use("/api/statuses", statusRouter);
 app.use("/api/job-roles", jobRoleRouter);
 
 app.use(errorHandlerMiddleware);

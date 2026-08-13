@@ -13,6 +13,8 @@ let app: Express.Application;
 let seededJobRoleId: number;
 let seededBandId: number;
 let seededCapabilityId: number;
+let openStatusId: number;
+let closedStatusId: number;
 
 beforeAll(async () => {
   container = await new PostgreSqlContainer("postgres:16-alpine").start();
@@ -23,6 +25,11 @@ beforeAll(async () => {
   prisma = (await import("../../src/prismaClient")).default;
   app = (await import("../../src/app")).default;
 
+  const openStatus = await prisma.status.findUniqueOrThrow({ where: { statusName: "OPEN" } });
+  const closedStatus = await prisma.status.findUniqueOrThrow({ where: { statusName: "CLOSED" } });
+  openStatusId = openStatus.statusId;
+  closedStatusId = closedStatus.statusId;
+
   const band = await prisma.band.create({ data: { name: "Senior Associate" } });
   const capability = await prisma.capability.create({ data: { name: "Engineering" } });
   seededBandId = band.id;
@@ -31,11 +38,11 @@ beforeAll(async () => {
     data: {
       roleName: "Software Engineer",
       location: "Gdansk",
-      status: "OPEN",
+      statusId: openStatusId,
       description: "Builds things",
       responsibilities: "Writes code",
-      openPositions: 3,
-      sharePointLink: "https://example.com/role/1",
+      numberOfOpenPositions: 3,
+      sharepointUrl: "https://example.com/role/1",
       bandId: seededBandId,
       capabilityId: seededCapabilityId,
     },
@@ -102,7 +109,7 @@ describe("GET /api/job-roles/:id", () => {
       jobRoleName: "Software Engineer",
       description: "Builds things",
       responsibilities: "Writes code",
-      link: "https://example.com/role/1",
+      sharepointUrl: "https://example.com/role/1",
       location: "Gdansk",
       capability: "Engineering",
       band: "Senior Associate",
@@ -138,8 +145,8 @@ describe("POST /api/job-roles", () => {
       capabilityId: seededCapabilityId,
       description: "Builds data pipelines",
       responsibilities: "Designs ETL jobs",
-      openPositions: 2,
-      sharePointLink: "https://example.com/role/new",
+      numberOfOpenPositions: 2,
+      sharepointUrl: "https://example.com/role/new",
       closingDate: "2026-11-30T00:00:00.000Z",
     });
 
@@ -152,8 +159,8 @@ describe("POST /api/job-roles", () => {
       capability: "Engineering",
       description: "Builds data pipelines",
       responsibilities: "Designs ETL jobs",
-      openPositions: 2,
-      sharePointLink: "https://example.com/role/new",
+      numberOfOpenPositions: 2,
+      sharepointUrl: "https://example.com/role/new",
       closingDate: "2026-11-30T00:00:00.000Z",
     });
     expect(typeof response.body.id).toBe("number");
@@ -161,7 +168,7 @@ describe("POST /api/job-roles", () => {
     await prisma.jobRole.delete({ where: { id: response.body.id } });
   });
 
-  it("returns 201 when nullable optional fields are null and openPositions is 0", async () => {
+  it("returns 201 when nullable optional fields are null and numberOfOpenPositions is 0", async () => {
     const response = await request(app).post("/api/job-roles").send({
       roleName: "Platform Engineer",
       location: "Remote",
@@ -169,8 +176,8 @@ describe("POST /api/job-roles", () => {
       capabilityId: seededCapabilityId,
       description: null,
       responsibilities: null,
-      openPositions: 0,
-      sharePointLink: null,
+      numberOfOpenPositions: 0,
+      sharepointUrl: null,
       closingDate: null,
     });
 
@@ -183,8 +190,8 @@ describe("POST /api/job-roles", () => {
       capability: "Engineering",
       description: null,
       responsibilities: null,
-      openPositions: 0,
-      sharePointLink: null,
+      numberOfOpenPositions: 0,
+      sharepointUrl: null,
       closingDate: null,
     });
 
@@ -205,11 +212,10 @@ describe("POST /api/job-roles", () => {
     });
   });
 
-  it("returns 201 and persists OPEN even when CLOSED is sent", async () => {
+  it("returns 201 and always creates the role with the OPEN status", async () => {
     const response = await request(app).post("/api/job-roles").send({
       roleName: "Integration Engineer",
       location: "Warsaw",
-      status: "CLOSED",
       bandId: seededBandId,
       capabilityId: seededCapabilityId,
     });
@@ -223,9 +229,34 @@ describe("POST /api/job-roles", () => {
     });
 
     const created = await prisma.jobRole.findUnique({ where: { id: response.body.id } });
-    expect(created?.status).toBe("OPEN");
+    expect(created?.statusId).toBe(openStatusId);
 
     await prisma.jobRole.delete({ where: { id: response.body.id } });
+  });
+
+  it("returns 400 when the client sends a status", async () => {
+    const response = await request(app).post("/api/job-roles").send({
+      roleName: "Integration Engineer",
+      location: "Warsaw",
+      statusId: closedStatusId,
+      bandId: seededBandId,
+      capabilityId: seededCapabilityId,
+    });
+
+    expect(response.status).toBe(400);
+  });
+
+  it("returns 400 when the pre-rename field names are sent", async () => {
+    const response = await request(app).post("/api/job-roles").send({
+      roleName: "Integration Engineer",
+      location: "Warsaw",
+      bandId: seededBandId,
+      capabilityId: seededCapabilityId,
+      openPositions: 2,
+      sharePointLink: "https://example.com/role/legacy",
+    });
+
+    expect(response.status).toBe(400);
   });
 
   it("returns 400 when closingDate is not a valid datetime", async () => {
@@ -261,21 +292,22 @@ describe("POST /api/job-roles", () => {
 
 describe("PUT /api/job-roles/:id", () => {
   let editableJobRoleId: number;
-
-  const validBody = {
-    jobRoleName: "Lead Software Engineer",
-    location: "Belfast",
-    status: "CLOSED",
-    bandName: "Consultant",
-    capabilityName: "Testing",
-    description: "Leads delivery teams.",
-    responsibilities: "Owns technical direction.",
-    sharePointLink: "https://example.com/role/updated",
-    openPositions: 7,
-    closingDate: "2027-01-31T23:59:59.000Z",
-  };
+  let validBody: Record<string, unknown>;
 
   beforeAll(async () => {
+    validBody = {
+      jobRoleName: "Lead Software Engineer",
+      location: "Belfast",
+      statusId: closedStatusId,
+      bandName: "Consultant",
+      capabilityName: "Testing",
+      description: "Leads delivery teams.",
+      responsibilities: "Owns technical direction.",
+      sharepointUrl: "https://example.com/role/updated",
+      numberOfOpenPositions: 7,
+      closingDate: "2027-01-31T23:59:59.000Z",
+    };
+
     await prisma.band.create({ data: { name: "Consultant" } });
     await prisma.capability.create({ data: { name: "Testing" } });
 
@@ -287,11 +319,11 @@ describe("PUT /api/job-roles/:id", () => {
       data: {
         roleName: "Editable Role",
         location: "Gdansk",
-        status: "OPEN",
+        statusId: openStatusId,
         description: "Before update",
         responsibilities: "Before update",
-        openPositions: 1,
-        sharePointLink: "https://example.com/role/before",
+        numberOfOpenPositions: 1,
+        sharepointUrl: "https://example.com/role/before",
         bandId: band.id,
         capabilityId: capability.id,
       },
@@ -309,7 +341,7 @@ describe("PUT /api/job-roles/:id", () => {
       jobRoleName: "Lead Software Engineer",
       description: "Leads delivery teams.",
       responsibilities: "Owns technical direction.",
-      link: "https://example.com/role/updated",
+      sharepointUrl: "https://example.com/role/updated",
       location: "Belfast",
       capability: "Testing",
       band: "Consultant",
@@ -329,15 +361,15 @@ describe("PUT /api/job-roles/:id", () => {
         ...validBody,
         description: null,
         responsibilities: null,
-        sharePointLink: null,
-        openPositions: null,
+        sharepointUrl: null,
+        numberOfOpenPositions: null,
         closingDate: null,
       });
 
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({
       description: null,
-      link: null,
+      sharepointUrl: null,
       closingDate: null,
     });
   });
@@ -369,13 +401,22 @@ describe("PUT /api/job-roles/:id", () => {
     expect(response.body.errors).toContainEqual(expect.objectContaining({ field: "location" }));
   });
 
-  it("returns 400 when the status is outside the enum", async () => {
+  it("returns 400 when statusId is not a positive integer", async () => {
     const response = await request(app)
       .put(`/api/job-roles/${editableJobRoleId}`)
-      .send({ ...validBody, status: "PENDING" });
+      .send({ ...validBody, statusId: 0 });
 
     expect(response.status).toBe(400);
-    expect(response.body.errors).toContainEqual(expect.objectContaining({ field: "status" }));
+    expect(response.body.errors).toContainEqual(expect.objectContaining({ field: "statusId" }));
+  });
+
+  it("returns 400 when the statusId does not exist", async () => {
+    const response = await request(app)
+      .put(`/api/job-roles/${editableJobRoleId}`)
+      .send({ ...validBody, statusId: 9999 });
+
+    expect(response.status).toBe(400);
+    expect(response.body.errors).toContainEqual(expect.objectContaining({ field: "statusId" }));
   });
 
   it("returns 400 when an unknown field is sent", async () => {
@@ -386,25 +427,25 @@ describe("PUT /api/job-roles/:id", () => {
     expect(response.status).toBe(400);
   });
 
-  it("returns 400 when sharePointLink is not a url", async () => {
+  it("returns 400 when sharepointUrl is not a url", async () => {
     const response = await request(app)
       .put(`/api/job-roles/${editableJobRoleId}`)
-      .send({ ...validBody, sharePointLink: "not-a-url" });
+      .send({ ...validBody, sharepointUrl: "not-a-url" });
 
     expect(response.status).toBe(400);
     expect(response.body.errors).toContainEqual(
-      expect.objectContaining({ field: "sharePointLink" }),
+      expect.objectContaining({ field: "sharepointUrl" }),
     );
   });
 
-  it("returns 400 when openPositions is negative", async () => {
+  it("returns 400 when numberOfOpenPositions is negative", async () => {
     const response = await request(app)
       .put(`/api/job-roles/${editableJobRoleId}`)
-      .send({ ...validBody, openPositions: -1 });
+      .send({ ...validBody, numberOfOpenPositions: -1 });
 
     expect(response.status).toBe(400);
     expect(response.body.errors).toContainEqual(
-      expect.objectContaining({ field: "openPositions" }),
+      expect.objectContaining({ field: "numberOfOpenPositions" }),
     );
   });
 
@@ -441,7 +482,7 @@ describe("DELETE /api/job-roles/:id", () => {
       data: {
         roleName: "Deletable Role",
         location: "Gdansk",
-        status: "OPEN",
+        statusId: openStatusId,
         bandId: band.id,
         capabilityId: capability.id,
       },
