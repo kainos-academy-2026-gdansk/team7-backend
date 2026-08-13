@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import {
+  applicationParamsSchema,
   idParamSchema,
   toFieldErrors,
   validateBody,
@@ -37,6 +38,22 @@ describe("idParamSchema", () => {
 
   it("rejects a missing id", () => {
     expect(idParamSchema.safeParse({}).success).toBe(false);
+  });
+});
+
+describe("applicationParamsSchema", () => {
+  it("accepts positive job role and application ids", () => {
+    const result = applicationParamsSchema.safeParse({ id: "1", applicationId: "2" });
+
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual({ id: 1, applicationId: 2 });
+  });
+
+  it("rejects an invalid application id", () => {
+    const result = applicationParamsSchema.safeParse({ id: "1", applicationId: "0" });
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].path).toEqual(["applicationId"]);
   });
 });
 

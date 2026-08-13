@@ -38,6 +38,8 @@ No secrets, no personal data, no per-ticket noise.
 | POST | `/api/auth/login` | `200` with JWT and user DTO; `401` for invalid credentials |
 | POST | `/api/job-roles/:id/apply` | `USER`-only; `201` creates an `IN_PROGRESS` application; `409` for unavailable or duplicate applications |
 | GET | `/api/applications` | `USER`-only; `200` returns the authenticated applicant's applications oldest first |
+| GET | `/api/job-roles/:id/applications` | ADMIN only; list applications for one role |
+| PATCH | `/api/job-roles/:id/applications/:applicationId` | ADMIN only; transition `IN_PROGRESS` to `HIRED`/`REJECTED` |
 
 ## Environment
 
@@ -66,6 +68,9 @@ No secrets, no personal data, no per-ticket noise.
 - Full blanket authentication is still deferred: only job-role write endpoints are protected; GET and reference-data endpoints remain public.
 - Application statuses are `IN_PROGRESS`, `HIRED`, and `REJECTED`; JobRole statuses remain `OPEN` and
   `CLOSED`. The shared table requires service-level status-domain validation.
+- Hiring is transactional: it requires an IN_PROGRESS application and an open position, then changes
+  the application to HIRED and decrements positions. Rejection leaves positions unchanged; invalid
+  transitions and unavailable positions return 409.
 - No E2E suite; validation stops at route-level integration tests.
 - No `.env.example` in the repository.
 - No pagination or filtering on `GET /api/job-roles`.
@@ -79,3 +84,4 @@ No secrets, no personal data, no per-ticket noise.
 | 2026-08-13 | Added the application database model and shared application statuses. | [2026-08-13-US050-US051-database.md](retrospectives/2026-08-13-US050-US051-database.md) |
 | 2026-08-13 | JobRole deletion now cascades linked applications. | [2026-08-13-US050-US051-database.md](retrospectives/2026-08-13-US050-US051-database.md) |
 | 2026-08-13 | Added applicant application creation and own-application listing API; CV/S3 and admin assessment remain out of scope. | [2026-08-13-us050-us053-application-api.md](retrospectives/2026-08-13-us050-us053-application-api.md) |
+| 2026-08-13 | Added ADMIN application assessment list and hire/reject workflow. | [2026-08-13-US051-assess-role-applications.md](retrospectives/2026-08-13-US051-assess-role-applications.md) |

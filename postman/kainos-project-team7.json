@@ -12,7 +12,9 @@
     { "key": "applicationRoleId", "value": "", "type": "string" },
     { "key": "applicationUserEmail", "value": "", "type": "string" },
     { "key": "applicationUserToken", "value": "", "type": "string" },
-    { "key": "applicationAdminToken", "value": "", "type": "string" }
+    { "key": "applicationAdminToken", "value": "", "type": "string" },
+    { "key": "applicationId", "value": "", "type": "string" },
+    { "key": "rejectApplicationId", "value": "", "type": "string" }
   ],
   "item": [
     {
@@ -101,6 +103,65 @@
         { "name": "Get job role by id - 200", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));", "pm.test('returns selected id', () => pm.expect(pm.response.json().id).to.eql(Number(pm.variables.get('id'))));"] } }], "request": { "method": "GET", "header": [], "url": { "raw": "{{baseURL}}/api/job-roles/{{id}}", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "{{id}}"] } }, "response": [] },
         { "name": "Get job role invalid id - 400", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 400', () => pm.response.to.have.status(400));"] } }], "request": { "method": "GET", "header": [], "url": { "raw": "{{baseURL}}/api/job-roles/invalid", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "invalid"] } }, "response": [] },
         { "name": "Get missing job role - 404", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 404', () => pm.response.to.have.status(404));"] } }], "request": { "method": "GET", "header": [], "url": { "raw": "{{baseURL}}/api/job-roles/999999", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "999999"] } }, "response": [] }
+      ]
+    },
+    {
+      "name": "Application Assessment",
+      "item": [
+        {
+          "name": "Select seeded assessment role - 200 (sets id)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));", "pm.test('stores the Technology Leader role id', () => { const role = pm.response.json().find(item => item.roleName === 'Technology Leader'); pm.expect(role).to.exist; pm.collectionVariables.set('id', String(role.id)); });"] } }],
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseURL}}/api/job-roles", "host": ["{{baseURL}}"], "path": ["api", "job-roles"] }, "description": "Run npx prisma db seed first. This stores the seeded role id used by the application assessment requests." },
+          "response": []
+        },
+        {
+          "name": "List role applications with ADMIN token - 200 (sets application ids)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));", "pm.test('stores two in-progress application ids', () => { const applications = pm.response.json().filter(application => application.status === 'IN_PROGRESS'); pm.expect(applications.length).to.be.at.least(2); pm.collectionVariables.set('applicationId', String(applications[0].id)); pm.collectionVariables.set('rejectApplicationId', String(applications[1].id)); });"] } }],
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseURL}}/api/job-roles/{{id}}/applications", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "{{id}}", "applications"] }, "description": "Run npx prisma db seed, set id to the Technology Leader role id, then run Login ADMIN first." },
+          "response": []
+        },
+        {
+          "name": "List role applications without token - 401",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 401', () => pm.response.to.have.status(401));"] } }],
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseURL}}/api/job-roles/{{id}}/applications", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "{{id}}", "applications"] } },
+          "response": []
+        },
+        {
+          "name": "Hire application with ADMIN token - 200",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));", "pm.test('application is hired', () => pm.expect(pm.response.json().application.status).to.eql('HIRED'));"] } }],
+          "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "body": { "mode": "raw", "raw": "{\n  \"status\": \"HIRED\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/job-roles/{{id}}/applications/{{applicationId}}", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "{{id}}", "applications", "{{applicationId}}"] }, "description": "Run the ADMIN application list request first to populate applicationId." },
+          "response": []
+        },
+        {
+          "name": "Reject application with ADMIN token - 200",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));", "pm.test('application is rejected', () => pm.expect(pm.response.json().application.status).to.eql('REJECTED'));"] } }],
+          "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "body": { "mode": "raw", "raw": "{\n  \"status\": \"REJECTED\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/job-roles/{{id}}/applications/{{rejectApplicationId}}", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "{{id}}", "applications", "{{rejectApplicationId}}"] }, "description": "Run the ADMIN application list request first to populate rejectApplicationId." },
+          "response": []
+        },
+        {
+          "name": "Transition processed application - 409",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 409', () => pm.response.to.have.status(409));"] } }],
+          "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "body": { "mode": "raw", "raw": "{\n  \"status\": \"REJECTED\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/job-roles/{{id}}/applications/{{applicationId}}", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "{{id}}", "applications", "{{applicationId}}"] }, "description": "Run Hire application first, then this request." },
+          "response": []
+        },
+        {
+          "name": "Update application invalid status - 400",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 400', () => pm.response.to.have.status(400));"] } }],
+          "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "body": { "mode": "raw", "raw": "{\n  \"status\": \"OPEN\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/job-roles/{{id}}/applications/{{applicationId}}", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "{{id}}", "applications", "{{applicationId}}"] } },
+          "response": []
+        },
+        {
+          "name": "Update application without token - 401",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 401', () => pm.response.to.have.status(401));"] } }],
+          "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"status\": \"HIRED\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/job-roles/{{id}}/applications/{{applicationId}}", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "{{id}}", "applications", "{{applicationId}}"] } },
+          "response": []
+        },
+        {
+          "name": "Update application with USER token - 403",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status is 403', () => pm.response.to.have.status(403));"] } }],
+          "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "body": { "mode": "raw", "raw": "{\n  \"status\": \"HIRED\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseURL}}/api/job-roles/{{id}}/applications/{{applicationId}}", "host": ["{{baseURL}}"], "path": ["api", "job-roles", "{{id}}", "applications", "{{applicationId}}"] }, "description": "Login as a seeded USER first to replace token." },
+          "response": []
+        }
       ]
     },
     {

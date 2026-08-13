@@ -25,6 +25,7 @@ app.use("/api/bands", bandRouter);
 app.use("/api/capabilities", capabilityRouter);
 app.use("/api/statuses", statusRouter);
 app.use("/api/job-roles", jobRoleRouter);
+app.use("/api/job-roles", applicationRouter);
 
 app.use(errorHandlerMiddleware);
 export default app;

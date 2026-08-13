@@ -193,3 +193,23 @@ is permanently removed. A future archive/soft-delete policy would require a deli
 
 **Alternatives.** Keep `RESTRICT` (rejected: deletion fails after applications exist); soft delete/archive
 (deferred: product explicitly chose deletion for this workflow).
+
+---
+
+## ADR-011 · 2026-08-13 · Application assessment transitions are transactional
+
+**Status:** Accepted
+
+**Context.** Hiring changes an application's status and the related JobRole's position count. Separate
+updates could leave the records inconsistent or allow a repeated/concurrent transition to decrement
+positions more than once.
+
+**Decision.** Resolve application status IDs by name and perform HIRE/REJECT transitions in a Prisma
+transaction. Only `IN_PROGRESS` applications may change; HIRE also conditionally decrements a positive
+position count. Invalid transitions and unavailable positions return `409`.
+
+**Consequences.** The operation is atomic and safe against stale state at the update boundary. The
+shared Status table still requires service-level validation; automatic JobRole closure remains US055.
+
+**Alternatives.** Independent updates (rejected: partial-write risk); frontend-only state check
+(rejected: clients cannot enforce database integrity).
