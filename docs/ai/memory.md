@@ -14,6 +14,12 @@ No secrets, no personal data, no per-ticket noise.
 - Authentication: `POST /api/auth/register` creates a `USER` with an Argon2 password hash;
   `POST /api/auth/login` returns a JWT for the `Authorization: Bearer` header. Job-role POST/PUT/DELETE
   require an `ADMIN` token; GET and reference-data routes remain public by intentional partial scope.
+- Applications: `Application` links a `User` applicant to a `JobRole` and the shared `Status` table;
+  it requires experience (`VARCHAR(1000)`), salary expectation (`VARCHAR(100)`), and skills
+  (`VARCHAR(2000)`). CV/S3 fields and application API behavior remain deferred under
+  `US050/US051-database`.
+- Deleting a `JobRole` cascades to its linked `Application` rows at the database level. Confirmation
+  and optional applicant notification belong to the later API/UI workflow, not the database migration.
 
 ## Endpoints (current)
 
@@ -56,6 +62,8 @@ No secrets, no personal data, no per-ticket noise.
 ## Known gaps / follow-ups
 
 - Full blanket authentication is still deferred: only job-role write endpoints are protected; GET and reference-data endpoints remain public.
+- Application statuses are `IN_PROGRESS`, `HIRED`, and `REJECTED`; JobRole statuses remain `OPEN` and
+  `CLOSED`. The shared table requires service-level status-domain validation.
 - No E2E suite; validation stops at route-level integration tests.
 - No `.env.example` in the repository.
 - No pagination or filtering on `GET /api/job-roles`.
@@ -66,3 +74,5 @@ No secrets, no personal data, no per-ticket noise.
 | ---- | ----- | ------ |
 | 2026-08-12 | Initial memory captured while introducing the agentic workflow. | [2026-08-12-us-020-delete-a-role.md](retrospectives/2026-08-12-us-020-delete-a-role.md) |
 | 2026-08-13 | Added authentication endpoints and partial ADMIN authorization for job-role writes. | [2026-08-13-us024-us040-us041-authentication.md](retrospectives/2026-08-13-us024-us040-us041-authentication.md) |
+| 2026-08-13 | Added the application database model and shared application statuses. | [2026-08-13-US050-US051-database.md](retrospectives/2026-08-13-US050-US051-database.md) |
+| 2026-08-13 | JobRole deletion now cascades linked applications. | [2026-08-13-US050-US051-database.md](retrospectives/2026-08-13-US050-US051-database.md) |

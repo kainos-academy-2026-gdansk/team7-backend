@@ -152,3 +152,44 @@ seed password remains a follow-up to replace before deployment.
 
 **Alternatives.** Keep a shared literal (rejected: predictable and easy to reuse); add a public promotion
 endpoint (rejected: privilege-escalation risk and outside the story scope).
+
+---
+
+## ADR-009 · 2026-08-13 · Reuse the Status table for application lifecycle states
+
+**Status:** Accepted
+
+**Context.** US050/US051 requires application states, while the repository already uses a shared
+`Status` lookup table for JobRole states. The database-only scope does not justify a second lookup
+table or a new enum.
+
+**Decision.** Store `Application.statusId` as a foreign key to `Status`. Keep `OPEN` and `CLOSED` for
+JobRole and add `IN_PROGRESS`, `HIRED`, and `REJECTED` for Application in the application migration.
+Application services must validate the status names allowed for their entity.
+
+**Consequences.** One lookup table is reused and status IDs remain environment-independent when
+resolved by name, but the database FK alone cannot prevent a JobRole from referencing an application
+status or an Application from referencing a JobRole status.
+
+**Alternatives.** New `ApplicationStatus` enum (rejected: user requested the existing table); separate
+application status table (rejected: unnecessary duplication for the current scope).
+
+---
+
+## ADR-010 · 2026-08-13 · Deleting a JobRole cascades linked applications
+
+**Status:** Accepted
+
+**Context.** US050/US051 permits a recruitment admin to remove a JobRole, and the product decision is
+that all applications connected to that role should be removed as well. The existing application FK
+used `RESTRICT`, which would have exposed an uncontrolled database error from the existing delete path.
+
+**Decision.** Configure `Application.jobRoleId` with `ON DELETE CASCADE`. Keep `Application.applicantId`
+and `Application.statusId` restrictive. The later API/UI workflow must require explicit admin confirmation
+before deletion; optional notifications are a post-commit concern and are outside this database change.
+
+**Consequences.** Role deletion is atomic and cannot leave orphaned applications, but application history
+is permanently removed. A future archive/soft-delete policy would require a deliberate schema change.
+
+**Alternatives.** Keep `RESTRICT` (rejected: deletion fails after applications exist); soft delete/archive
+(deferred: product explicitly chose deletion for this workflow).

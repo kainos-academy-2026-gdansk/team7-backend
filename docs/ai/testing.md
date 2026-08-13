@@ -89,3 +89,9 @@ Rules learned the hard way:
 - When adding a native or security-sensitive dependency, verify both `npm ci` in the production image
   dependency stage and the complete image build. Record package-install success separately from later
   build failures such as certificate or ORM-engine download errors.
+
+## Database-only migrations
+
+- For migrations that add lookup data, generate them with `--create-only`, inspect the SQL, then apply
+  them. Verify fresh-database deployment, migration status, lookup rows, column sizes, constraints, and
+  indexes separately from the application test suite.
