@@ -90,6 +90,26 @@ describe("ApplicationService", () => {
       });
     });
 
+    it("trims submitted values before persisting the application", async () => {
+      const paddedRequestBody = {
+        experience: `  ${requestBody.experience}  `,
+        salaryExpectation: `  ${requestBody.salaryExpectation}  `,
+        skills: `  ${requestBody.skills}  `,
+      };
+
+      await applicationService.createApplication(7, 12, paddedRequestBody);
+
+      expect(createApplication).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            experience: requestBody.experience,
+            salaryExpectation: requestBody.salaryExpectation,
+            skills: requestBody.skills,
+          }),
+        }),
+      );
+    });
+
     it("returns null when the job role does not exist", async () => {
       findJobRole.mockResolvedValue(null);
 

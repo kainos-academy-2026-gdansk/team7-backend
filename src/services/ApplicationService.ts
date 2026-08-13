@@ -67,15 +67,21 @@ export class ApplicationService {
       throw new Error(`Status "${IN_PROGRESS_STATUS_NAME}" is not configured`);
     }
 
+    const normalizedData = {
+      experience: data.experience.trim(),
+      salaryExpectation: data.salaryExpectation.trim(),
+      skills: data.skills.trim(),
+    };
+
     try {
       return await this.prismaClient.application.create({
         data: {
           applicantId,
           jobRoleId,
           statusId: inProgressStatus.statusId,
-          experience: data.experience,
-          salaryExpectation: data.salaryExpectation,
-          skills: data.skills,
+          experience: normalizedData.experience,
+          salaryExpectation: normalizedData.salaryExpectation,
+          skills: normalizedData.skills,
         },
         include: {
           jobRole: {

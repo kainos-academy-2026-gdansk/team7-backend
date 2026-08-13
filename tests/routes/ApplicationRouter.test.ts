@@ -125,6 +125,27 @@ describe("POST /api/job-roles/:id/applications", () => {
     expect(savedApplication.statusId).toBe(inProgressStatusId);
   });
 
+  it("trims whitespace before persisting values at their maximum lengths", async () => {
+    const role = await createJobRole();
+    const paddedBody = {
+      experience: `${"a".repeat(1000)}  `,
+      salaryExpectation: `${"b".repeat(100)}  `,
+      skills: `${"c".repeat(2000)}  `,
+    };
+
+    const response = await request(app)
+      .post(`/api/job-roles/${role.id}/applications`)
+      .set("Authorization", `Bearer ${userToken}`)
+      .send(paddedBody);
+
+    expect(response.status).toBe(201);
+    expect(response.body).toMatchObject({
+      experience: "a".repeat(1000),
+      salaryExpectation: "b".repeat(100),
+      skills: "c".repeat(2000),
+    });
+  });
+
   it("returns 401 when no token is provided", async () => {
     const role = await createJobRole();
 
