@@ -133,3 +133,22 @@ handover notes that a human posts or approves.
 
 **Alternatives.** Full write access (rejected: no human gate); no integration (rejected: loses the
 value of task context in intake).
+
+---
+
+## ADR-008 · 2026-08-13 · Development authentication bootstrap credentials are not production credentials
+
+**Status:** Accepted
+
+**Context.** Local and Postman verification needs a development ADMIN account, but a reusable password
+literal in seed code can be mistaken for a deployment credential.
+
+**Decision.** The seeded ADMIN account is development-only and must never be reused in production.
+Bootstrap credentials must be moved to an environment-provided value before production use; secrets
+must not be committed to source or documentation.
+
+**Consequences.** Local setup needs an explicit credential configuration step, and the current literal
+seed password remains a follow-up to replace before deployment.
+
+**Alternatives.** Keep a shared literal (rejected: predictable and easy to reuse); add a public promotion
+endpoint (rejected: privilege-escalation risk and outside the story scope).

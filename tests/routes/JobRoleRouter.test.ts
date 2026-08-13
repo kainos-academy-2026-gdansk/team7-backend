@@ -1,9 +1,10 @@
 import { execSync } from "node:child_process";
-import type { PrismaClient } from "@prisma/client";
+import { type PrismaClient, Role } from "@prisma/client";
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 import type Express from "express";
 import request from "supertest";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { signToken } from "../../src/lib/jwt";
 
 const CONTAINER_TIMEOUT_MS = 120_000;
 
@@ -15,15 +16,20 @@ let seededBandId: number;
 let seededCapabilityId: number;
 let openStatusId: number;
 let closedStatusId: number;
+let adminToken: string;
+let userToken: string;
 
 beforeAll(async () => {
   container = await new PostgreSqlContainer("postgres:16-alpine").start();
   process.env.DATABASE_URL = container.getConnectionUri();
+  process.env.JWT_SECRET = "test-secret";
 
   execSync("npx prisma migrate deploy", { stdio: "inherit" });
 
   prisma = (await import("../../src/prismaClient")).default;
   app = (await import("../../src/app")).default;
+  adminToken = signToken({ sub: 1, email: "admin@example.com", role: Role.ADMIN });
+  userToken = signToken({ sub: 2, email: "user@example.com", role: Role.USER });
 
   const openStatus = await prisma.status.findUniqueOrThrow({ where: { statusName: "OPEN" } });
   const closedStatus = await prisma.status.findUniqueOrThrow({ where: { statusName: "CLOSED" } });
@@ -137,18 +143,36 @@ describe("GET /api/job-roles/:id", () => {
 });
 
 describe("POST /api/job-roles", () => {
+  it("returns 401 when no token is provided", async () => {
+    const response = await request(app).post("/api/job-roles").send({});
+
+    expect(response.status).toBe(401);
+  });
+
+  it("returns 403 when a USER token is provided", async () => {
+    const response = await request(app)
+      .post("/api/job-roles")
+      .set("Authorization", `Bearer ${userToken}`)
+      .send({});
+
+    expect(response.status).toBe(403);
+  });
+
   it("returns 201 with created role dto for a valid payload", async () => {
-    const response = await request(app).post("/api/job-roles").send({
-      roleName: "Data Engineer",
-      location: "Warsaw",
-      bandId: seededBandId,
-      capabilityId: seededCapabilityId,
-      description: "Builds data pipelines",
-      responsibilities: "Designs ETL jobs",
-      numberOfOpenPositions: 2,
-      sharepointUrl: "https://example.com/role/new",
-      closingDate: "2026-11-30T00:00:00.000Z",
-    });
+    const response = await request(app)
+      .post("/api/job-roles")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        roleName: "Data Engineer",
+        location: "Warsaw",
+        bandId: seededBandId,
+        capabilityId: seededCapabilityId,
+        description: "Builds data pipelines",
+        responsibilities: "Designs ETL jobs",
+        numberOfOpenPositions: 2,
+        sharepointUrl: "https://example.com/role/new",
+        closingDate: "2026-11-30T00:00:00.000Z",
+      });
 
     expect(response.status).toBe(201);
     expect(response.body).toMatchObject({
@@ -169,17 +193,20 @@ describe("POST /api/job-roles", () => {
   });
 
   it("returns 201 when nullable optional fields are null and numberOfOpenPositions is 0", async () => {
-    const response = await request(app).post("/api/job-roles").send({
-      roleName: "Platform Engineer",
-      location: "Remote",
-      bandId: seededBandId,
-      capabilityId: seededCapabilityId,
-      description: null,
-      responsibilities: null,
-      numberOfOpenPositions: 0,
-      sharepointUrl: null,
-      closingDate: null,
-    });
+    const response = await request(app)
+      .post("/api/job-roles")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        roleName: "Platform Engineer",
+        location: "Remote",
+        bandId: seededBandId,
+        capabilityId: seededCapabilityId,
+        description: null,
+        responsibilities: null,
+        numberOfOpenPositions: 0,
+        sharepointUrl: null,
+        closingDate: null,
+      });
 
     expect(response.status).toBe(201);
     expect(response.body).toMatchObject({
@@ -199,11 +226,14 @@ describe("POST /api/job-roles", () => {
   });
 
   it("returns 400 when a required field is missing", async () => {
-    const response = await request(app).post("/api/job-roles").send({
-      location: "Warsaw",
-      bandId: seededBandId,
-      capabilityId: seededCapabilityId,
-    });
+    const response = await request(app)
+      .post("/api/job-roles")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        location: "Warsaw",
+        bandId: seededBandId,
+        capabilityId: seededCapabilityId,
+      });
 
     expect(response.status).toBe(400);
     expect(response.body.errors).toContainEqual({
@@ -213,12 +243,15 @@ describe("POST /api/job-roles", () => {
   });
 
   it("returns 201 and always creates the role with the OPEN status", async () => {
-    const response = await request(app).post("/api/job-roles").send({
-      roleName: "Integration Engineer",
-      location: "Warsaw",
-      bandId: seededBandId,
-      capabilityId: seededCapabilityId,
-    });
+    const response = await request(app)
+      .post("/api/job-roles")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        roleName: "Integration Engineer",
+        location: "Warsaw",
+        bandId: seededBandId,
+        capabilityId: seededCapabilityId,
+      });
 
     expect(response.status).toBe(201);
     expect(response.body).toMatchObject({
@@ -235,38 +268,47 @@ describe("POST /api/job-roles", () => {
   });
 
   it("returns 400 when the client sends a status", async () => {
-    const response = await request(app).post("/api/job-roles").send({
-      roleName: "Integration Engineer",
-      location: "Warsaw",
-      statusId: closedStatusId,
-      bandId: seededBandId,
-      capabilityId: seededCapabilityId,
-    });
+    const response = await request(app)
+      .post("/api/job-roles")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        roleName: "Integration Engineer",
+        location: "Warsaw",
+        statusId: closedStatusId,
+        bandId: seededBandId,
+        capabilityId: seededCapabilityId,
+      });
 
     expect(response.status).toBe(400);
   });
 
   it("returns 400 when the pre-rename field names are sent", async () => {
-    const response = await request(app).post("/api/job-roles").send({
-      roleName: "Integration Engineer",
-      location: "Warsaw",
-      bandId: seededBandId,
-      capabilityId: seededCapabilityId,
-      openPositions: 2,
-      sharePointLink: "https://example.com/role/legacy",
-    });
+    const response = await request(app)
+      .post("/api/job-roles")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        roleName: "Integration Engineer",
+        location: "Warsaw",
+        bandId: seededBandId,
+        capabilityId: seededCapabilityId,
+        openPositions: 2,
+        sharePointLink: "https://example.com/role/legacy",
+      });
 
     expect(response.status).toBe(400);
   });
 
   it("returns 400 when closingDate is not a valid datetime", async () => {
-    const response = await request(app).post("/api/job-roles").send({
-      roleName: "QA Engineer",
-      location: "Krakow",
-      bandId: seededBandId,
-      capabilityId: seededCapabilityId,
-      closingDate: "31-12-2026",
-    });
+    const response = await request(app)
+      .post("/api/job-roles")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        roleName: "QA Engineer",
+        location: "Krakow",
+        bandId: seededBandId,
+        capabilityId: seededCapabilityId,
+        closingDate: "31-12-2026",
+      });
 
     expect(response.status).toBe(400);
     expect(response.body.errors).toContainEqual({
@@ -278,12 +320,15 @@ describe("POST /api/job-roles", () => {
   it("returns 500 when database insert fails", async () => {
     vi.spyOn(prisma.jobRole, "create").mockRejectedValueOnce(new Error("Insert failed"));
 
-    const response = await request(app).post("/api/job-roles").send({
-      roleName: "Data Engineer",
-      location: "Warsaw",
-      bandId: seededBandId,
-      capabilityId: seededCapabilityId,
-    });
+    const response = await request(app)
+      .post("/api/job-roles")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        roleName: "Data Engineer",
+        location: "Warsaw",
+        bandId: seededBandId,
+        capabilityId: seededCapabilityId,
+      });
 
     expect(response.status).toBe(500);
     expect(response.body).toEqual({ message: "Insert failed" });
@@ -332,8 +377,26 @@ describe("PUT /api/job-roles/:id", () => {
     editableJobRoleId = jobRole.id;
   });
 
+  it("returns 401 when no token is provided", async () => {
+    const response = await request(app).put(`/api/job-roles/${editableJobRoleId}`).send({});
+
+    expect(response.status).toBe(401);
+  });
+
+  it("returns 403 when a USER token is provided", async () => {
+    const response = await request(app)
+      .put(`/api/job-roles/${editableJobRoleId}`)
+      .set("Authorization", `Bearer ${userToken}`)
+      .send({});
+
+    expect(response.status).toBe(403);
+  });
+
   it("returns 200 with the updated dto and persists the change", async () => {
-    const response = await request(app).put(`/api/job-roles/${editableJobRoleId}`).send(validBody);
+    const response = await request(app)
+      .put(`/api/job-roles/${editableJobRoleId}`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send(validBody);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
@@ -357,6 +420,7 @@ describe("PUT /api/job-roles/:id", () => {
   it("clears nullable fields when null is sent", async () => {
     const response = await request(app)
       .put(`/api/job-roles/${editableJobRoleId}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({
         ...validBody,
         description: null,
@@ -375,14 +439,20 @@ describe("PUT /api/job-roles/:id", () => {
   });
 
   it("returns 404 when the job role does not exist", async () => {
-    const response = await request(app).put("/api/job-roles/9999").send(validBody);
+    const response = await request(app)
+      .put("/api/job-roles/9999")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send(validBody);
 
     expect(response.status).toBe(404);
     expect(response.body).toEqual({ message: "Job role not found" });
   });
 
   it("returns 400 when the id is not a positive integer", async () => {
-    const response = await request(app).put("/api/job-roles/abc").send(validBody);
+    const response = await request(app)
+      .put("/api/job-roles/abc")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send(validBody);
 
     expect(response.status).toBe(400);
     expect(response.body.errors).toEqual([
@@ -395,6 +465,7 @@ describe("PUT /api/job-roles/:id", () => {
 
     const response = await request(app)
       .put(`/api/job-roles/${editableJobRoleId}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send(bodyWithoutLocation);
 
     expect(response.status).toBe(400);
@@ -404,6 +475,7 @@ describe("PUT /api/job-roles/:id", () => {
   it("returns 400 when statusId is not a positive integer", async () => {
     const response = await request(app)
       .put(`/api/job-roles/${editableJobRoleId}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({ ...validBody, statusId: 0 });
 
     expect(response.status).toBe(400);
@@ -413,6 +485,7 @@ describe("PUT /api/job-roles/:id", () => {
   it("returns 400 when the statusId does not exist", async () => {
     const response = await request(app)
       .put(`/api/job-roles/${editableJobRoleId}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({ ...validBody, statusId: 9999 });
 
     expect(response.status).toBe(400);
@@ -422,6 +495,7 @@ describe("PUT /api/job-roles/:id", () => {
   it("returns 400 when an unknown field is sent", async () => {
     const response = await request(app)
       .put(`/api/job-roles/${editableJobRoleId}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({ ...validBody, id: 99 });
 
     expect(response.status).toBe(400);
@@ -430,6 +504,7 @@ describe("PUT /api/job-roles/:id", () => {
   it("returns 400 when sharepointUrl is not a url", async () => {
     const response = await request(app)
       .put(`/api/job-roles/${editableJobRoleId}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({ ...validBody, sharepointUrl: "not-a-url" });
 
     expect(response.status).toBe(400);
@@ -441,6 +516,7 @@ describe("PUT /api/job-roles/:id", () => {
   it("returns 400 when numberOfOpenPositions is negative", async () => {
     const response = await request(app)
       .put(`/api/job-roles/${editableJobRoleId}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({ ...validBody, numberOfOpenPositions: -1 });
 
     expect(response.status).toBe(400);
@@ -452,6 +528,7 @@ describe("PUT /api/job-roles/:id", () => {
   it("returns 400 when the band name does not exist", async () => {
     const response = await request(app)
       .put(`/api/job-roles/${editableJobRoleId}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({ ...validBody, bandName: "Nonexistent Band" });
 
     expect(response.status).toBe(400);
@@ -461,6 +538,7 @@ describe("PUT /api/job-roles/:id", () => {
   it("returns 400 when the capability name does not exist", async () => {
     const response = await request(app)
       .put(`/api/job-roles/${editableJobRoleId}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({ ...validBody, capabilityName: "Nonexistent Capability" });
 
     expect(response.status).toBe(400);
@@ -491,15 +569,33 @@ describe("DELETE /api/job-roles/:id", () => {
     deletableJobRoleId = jobRole.id;
   });
 
-  it("returns 204 with an empty body when the job role is deleted", async () => {
+  it("returns 401 when no token is provided", async () => {
     const response = await request(app).delete(`/api/job-roles/${deletableJobRoleId}`);
+
+    expect(response.status).toBe(401);
+  });
+
+  it("returns 403 when a USER token is provided", async () => {
+    const response = await request(app)
+      .delete(`/api/job-roles/${deletableJobRoleId}`)
+      .set("Authorization", `Bearer ${userToken}`);
+
+    expect(response.status).toBe(403);
+  });
+
+  it("returns 204 with an empty body when the job role is deleted", async () => {
+    const response = await request(app)
+      .delete(`/api/job-roles/${deletableJobRoleId}`)
+      .set("Authorization", `Bearer ${adminToken}`);
 
     expect(response.status).toBe(204);
     expect(response.body).toEqual({});
   });
 
   it("removes the job role from the database", async () => {
-    await request(app).delete(`/api/job-roles/${deletableJobRoleId}`);
+    await request(app)
+      .delete(`/api/job-roles/${deletableJobRoleId}`)
+      .set("Authorization", `Bearer ${adminToken}`);
 
     const reread = await request(app).get(`/api/job-roles/${deletableJobRoleId}`);
 
@@ -507,14 +603,18 @@ describe("DELETE /api/job-roles/:id", () => {
   });
 
   it("returns 404 when the job role does not exist", async () => {
-    const response = await request(app).delete("/api/job-roles/999999");
+    const response = await request(app)
+      .delete("/api/job-roles/999999")
+      .set("Authorization", `Bearer ${adminToken}`);
 
     expect(response.status).toBe(404);
     expect(response.body).toEqual({ message: "Job role not found" });
   });
 
   it("returns 400 when the id is not a positive integer", async () => {
-    const response = await request(app).delete("/api/job-roles/abc");
+    const response = await request(app)
+      .delete("/api/job-roles/abc")
+      .set("Authorization", `Bearer ${adminToken}`);
 
     expect(response.status).toBe(400);
     expect(response.body.errors).toContainEqual(expect.objectContaining({ field: "id" }));
