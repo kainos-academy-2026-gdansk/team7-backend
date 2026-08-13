@@ -152,3 +152,24 @@ seed password remains a follow-up to replace before deployment.
 
 **Alternatives.** Keep a shared literal (rejected: predictable and easy to reuse); add a public promotion
 endpoint (rejected: privilege-escalation risk and outside the story scope).
+
+---
+
+## ADR-009 · 2026-08-13 · Reuse the Status table for application lifecycle states
+
+**Status:** Accepted
+
+**Context.** US050/US051 requires application states, while the repository already uses a shared
+`Status` lookup table for JobRole states. The database-only scope does not justify a second lookup
+table or a new enum.
+
+**Decision.** Store `Application.statusId` as a foreign key to `Status`. Keep `OPEN` and `CLOSED` for
+JobRole and add `IN_PROGRESS`, `HIRED`, and `REJECTED` for Application in the application migration.
+Application services must validate the status names allowed for their entity.
+
+**Consequences.** One lookup table is reused and status IDs remain environment-independent when
+resolved by name, but the database FK alone cannot prevent a JobRole from referencing an application
+status or an Application from referencing a JobRole status.
+
+**Alternatives.** New `ApplicationStatus` enum (rejected: user requested the existing table); separate
+application status table (rejected: unnecessary duplication for the current scope).
