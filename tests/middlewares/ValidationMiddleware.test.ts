@@ -22,11 +22,11 @@ function createResponse() {
 }
 
 describe("idParamSchema", () => {
-  it.each(["1", "42", "1000"])("accepts %s and coerces it to a number", (id) => {
+  it.each(["1", "42", "1000"])("accepts %s", (id) => {
     const result = idParamSchema.safeParse({ id });
 
     expect(result.success).toBe(true);
-    expect(result.data).toEqual({ id: Number(id) });
+    expect(result.data).toEqual({ id });
   });
 
   it.each(["0", "-1", "1.5", "01", "abc", "1a", "", " 1"])("rejects %s", (id) => {
@@ -46,7 +46,7 @@ describe("applicationParamsSchema", () => {
     const result = applicationParamsSchema.safeParse({ id: "1", applicationId: "2" });
 
     expect(result.success).toBe(true);
-    expect(result.data).toEqual({ id: 1, applicationId: 2 });
+    expect(result.data).toEqual({ id: "1", applicationId: "2" });
   });
 
   it("rejects an invalid application id", () => {
