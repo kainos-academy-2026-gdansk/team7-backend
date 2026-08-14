@@ -222,12 +222,16 @@ async function main() {
   });
 
   const applicationRole = await prisma.jobRole.findFirst({
-    where: { roleName: "Technology Leader" },
+    where: { roleName: "Technology Leader", location: "Belfast" },
     orderBy: { id: "asc" },
     select: { id: true },
   });
   if (!applicationRole) throw new Error("Application seed role not found");
 
+  await prisma.jobRole.update({
+    where: { id: applicationRole.id },
+    data: { numberOfOpenPositions: 1, statusId: statusId("OPEN") },
+  });
   const inProgressStatusId = statusId("IN_PROGRESS");
   await Promise.all([
     prisma.application.upsert({
