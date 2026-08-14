@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
+import { ConflictError } from "../lib/HttpError";
 import Logger from "../lib/logger";
 import { toFieldErrors } from "./ValidationMiddleware";
 export default function errorHandlerMiddleware(
@@ -12,6 +13,11 @@ export default function errorHandlerMiddleware(
 
   if (err instanceof ZodError) {
     res.status(400).json({ errors: toFieldErrors(err) });
+    return;
+  }
+
+  if (err instanceof ConflictError) {
+    res.status(409).json({ message: err.message });
     return;
   }
 

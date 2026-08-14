@@ -101,3 +101,8 @@ Rules learned the hard way:
 - For migrations that add lookup data, generate them with `--create-only`, inspect the SQL, then apply
   them. Verify fresh-database deployment, migration status, lookup rows, column sizes, constraints, and
   indexes separately from the application test suite.
+
+## Seeded workflow scenarios
+
+- When Postman requests depend on seeded records, use idempotent seed upserts to restore the scenario's
+  starting state and have a collection request capture the generated resource IDs before mutations.

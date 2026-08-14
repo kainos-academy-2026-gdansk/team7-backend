@@ -1,9 +1,14 @@
 import { Role } from "@prisma/client";
 import express from "express";
-import { CreateApplicationSchema } from "../Dto/ApplicationDTO";
+import { CreateApplicationSchema, UpdateApplicationStatusSchema } from "../Dto/ApplicationDTO";
 import { ApplicationController } from "../controllers/ApplicationController";
 import { authenticate, authorize } from "../middlewares/AuthMiddleware";
-import { idParamSchema, validateBody, validateParams } from "../middlewares/ValidationMiddleware";
+import {
+  applicationParamsSchema,
+  idParamSchema,
+  validateBody,
+  validateParams,
+} from "../middlewares/ValidationMiddleware";
 import prisma from "../prismaClient";
 import { ApplicationService } from "../services/ApplicationService";
 
@@ -25,6 +30,23 @@ router.get(
   authenticate,
   authorize(Role.USER),
   applicationController.getMyApplications,
+);
+
+router.get(
+  "/:id/applications",
+  authenticate,
+  authorize(Role.ADMIN),
+  validateParams(idParamSchema),
+  applicationController.getApplicationsByJobRoleId,
+);
+
+router.patch(
+  "/:id/applications/:applicationId",
+  authenticate,
+  authorize(Role.ADMIN),
+  validateParams(applicationParamsSchema),
+  validateBody(UpdateApplicationStatusSchema),
+  applicationController.updateStatus,
 );
 
 export default router;

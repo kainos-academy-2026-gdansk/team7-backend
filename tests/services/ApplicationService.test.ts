@@ -1,5 +1,7 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ConflictError } from "../../src/lib/HttpError";
+import type { ApplicationListItemPayload } from "../../src/models/Application";
 import {
   ApplicationConflictError,
   ApplicationService,
@@ -10,6 +12,21 @@ const findApplication = vi.fn();
 const createApplication = vi.fn();
 const findApplications = vi.fn();
 const findStatus = vi.fn();
+const updateApplication = vi.fn();
+const findApplicationForTransition = vi.fn();
+const getUpdatedApplication = vi.fn();
+const updateJobRole = vi.fn();
+const getUpdatedJobRole = vi.fn();
+const transaction = vi.fn();
+const transactionMock = {
+  status: { findUnique: findStatus },
+  application: {
+    updateMany: updateApplication,
+    findFirst: findApplicationForTransition,
+    findUniqueOrThrow: getUpdatedApplication,
+  },
+  jobRole: { updateMany: updateJobRole, findUniqueOrThrow: getUpdatedJobRole },
+};
 const dbMock = {
   jobRole: { findUnique: findJobRole },
   application: {
@@ -18,6 +35,7 @@ const dbMock = {
     findMany: findApplications,
   },
   status: { findUnique: findStatus },
+  $transaction: transaction,
 } as unknown as PrismaClient;
 
 const requestBody = {
@@ -39,12 +57,23 @@ const application = {
   jobRole: { id: 12, roleName: "Software Engineer" },
   status: { statusName: "IN_PROGRESS" },
 };
+const applicationListItem: ApplicationListItemPayload = {
+  id: 1,
+  experience: application.experience,
+  salaryExpectation: application.salaryExpectation,
+  skills: application.skills,
+  createdAt: application.createdAt,
+  updatedAt: application.updatedAt,
+  applicant: { email: "applicant@example.com" },
+  status: application.status,
+};
 
 describe("ApplicationService", () => {
   let applicationService: ApplicationService;
 
   beforeEach(() => {
     vi.resetAllMocks();
+    transaction.mockImplementation(async (callback) => await callback(transactionMock));
     applicationService = new ApplicationService(dbMock);
   });
 
@@ -174,6 +203,85 @@ describe("ApplicationService", () => {
         },
         orderBy: { createdAt: "asc" },
       });
+    });
+  });
+
+  describe("findByJobRoleId", () => {
+    it("returns null without querying applications when the job role is missing", async () => {
+      findJobRole.mockResolvedValue(null);
+      await expect(applicationService.findByJobRoleId(999)).resolves.toBeNull();
+      expect(findApplications).not.toHaveBeenCalled();
+    });
+
+    it("lists an existing job role's applications oldest first", async () => {
+      findJobRole.mockResolvedValue({ id: 12 });
+      findApplications.mockResolvedValue([applicationListItem]);
+
+      await expect(applicationService.findByJobRoleId(12)).resolves.toEqual([applicationListItem]);
+      expect(findApplications).toHaveBeenCalledWith({
+        where: { jobRoleId: 12 },
+        select: {
+          id: true,
+          experience: true,
+          salaryExpectation: true,
+          skills: true,
+          createdAt: true,
+          updatedAt: true,
+          applicant: { select: { email: true } },
+          status: { select: { statusName: true } },
+        },
+        orderBy: { createdAt: "asc" },
+      });
+    });
+  });
+
+  describe("updateStatus", () => {
+    beforeEach(() => {
+      findStatus.mockImplementation(({ where }: { where: { statusName: string } }) => {
+        const ids = { IN_PROGRESS: 1, HIRED: 2, REJECTED: 3 };
+        return Promise.resolve({ statusId: ids[where.statusName as keyof typeof ids] });
+      });
+      getUpdatedApplication.mockResolvedValue(applicationListItem);
+      getUpdatedJobRole.mockResolvedValue({ numberOfOpenPositions: 1 });
+    });
+
+    it("hires an in-progress application and decrements the position count", async () => {
+      updateApplication.mockResolvedValue({ count: 1 });
+      updateJobRole.mockResolvedValue({ count: 1 });
+
+      await expect(applicationService.updateStatus(12, 1, "HIRED")).resolves.toEqual({
+        application: applicationListItem,
+        numberOfOpenPositions: 1,
+      });
+      expect(updateJobRole).toHaveBeenCalledWith({
+        where: { id: 12, numberOfOpenPositions: { gt: 0 } },
+        data: { numberOfOpenPositions: { decrement: 1 } },
+      });
+    });
+
+    it("rejects without changing the position count", async () => {
+      updateApplication.mockResolvedValue({ count: 1 });
+      await applicationService.updateStatus(12, 1, "REJECTED");
+      expect(updateJobRole).not.toHaveBeenCalled();
+    });
+
+    it("returns null for an application outside the job role", async () => {
+      updateApplication.mockResolvedValue({ count: 0 });
+      findApplicationForTransition.mockResolvedValue(null);
+      await expect(applicationService.updateStatus(12, 1, "HIRED")).resolves.toBeNull();
+    });
+
+    it("rejects processed applications and unavailable positions", async () => {
+      updateApplication.mockResolvedValueOnce({ count: 0 });
+      findApplicationForTransition.mockResolvedValueOnce({ id: 1 });
+      await expect(applicationService.updateStatus(12, 1, "HIRED")).rejects.toEqual(
+        new ConflictError("Application is no longer in progress"),
+      );
+      updateApplication.mockResolvedValueOnce({ count: 1 });
+      updateJobRole.mockResolvedValueOnce({ count: 0 });
+      await expect(applicationService.updateStatus(12, 1, "HIRED")).rejects.toEqual(
+        new ConflictError("No open positions are available"),
+      );
     });
   });
 });

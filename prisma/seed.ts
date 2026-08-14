@@ -14,6 +14,27 @@ async function main() {
       role: Role.ADMIN,
     },
   });
+  const applicantPasswordHash = await argon2.hash("Applicant!123");
+  const [applicantOne, applicantTwo] = await Promise.all([
+    prisma.user.upsert({
+      where: { email: "applicant.one@kainos.local" },
+      update: {},
+      create: {
+        email: "applicant.one@kainos.local",
+        passwordHash: applicantPasswordHash,
+        role: Role.USER,
+      },
+    }),
+    prisma.user.upsert({
+      where: { email: "applicant.two@kainos.local" },
+      update: {},
+      create: {
+        email: "applicant.two@kainos.local",
+        passwordHash: applicantPasswordHash,
+        role: Role.USER,
+      },
+    }),
+  ]);
 
   await prisma.band.createMany({
     data: [
@@ -199,6 +220,65 @@ async function main() {
     ],
     skipDuplicates: true,
   });
+
+  const applicationRole = await prisma.jobRole.findFirst({
+    where: { roleName: "Technology Leader", location: "Belfast" },
+    orderBy: { id: "asc" },
+    select: { id: true },
+  });
+  if (!applicationRole) throw new Error("Application seed role not found");
+
+  await prisma.jobRole.update({
+    where: { id: applicationRole.id },
+    data: { numberOfOpenPositions: 1, statusId: statusId("OPEN") },
+  });
+  const inProgressStatusId = statusId("IN_PROGRESS");
+  await Promise.all([
+    prisma.application.upsert({
+      where: {
+        applicantId_jobRoleId: {
+          applicantId: applicantOne.id,
+          jobRoleId: applicationRole.id,
+        },
+      },
+      update: {
+        statusId: inProgressStatusId,
+        experience: "Five years leading engineering teams and delivery programmes.",
+        salaryExpectation: "70000",
+        skills: "TypeScript, Node.js, AWS",
+      },
+      create: {
+        applicantId: applicantOne.id,
+        jobRoleId: applicationRole.id,
+        statusId: inProgressStatusId,
+        experience: "Five years leading engineering teams and delivery programmes.",
+        salaryExpectation: "70000",
+        skills: "TypeScript, Node.js, AWS",
+      },
+    }),
+    prisma.application.upsert({
+      where: {
+        applicantId_jobRoleId: {
+          applicantId: applicantTwo.id,
+          jobRoleId: applicationRole.id,
+        },
+      },
+      update: {
+        statusId: inProgressStatusId,
+        experience: "Three years building accessible frontend applications.",
+        salaryExpectation: "55000",
+        skills: "React, TypeScript, CSS",
+      },
+      create: {
+        applicantId: applicantTwo.id,
+        jobRoleId: applicationRole.id,
+        statusId: inProgressStatusId,
+        experience: "Three years building accessible frontend applications.",
+        salaryExpectation: "55000",
+        skills: "React, TypeScript, CSS",
+      },
+    }),
+  ]);
 }
 
 main()

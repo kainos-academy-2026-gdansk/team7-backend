@@ -33,3 +33,26 @@ export interface ApplicationResponseDto {
   createdAt: string;
   updatedAt: string;
 }
+export interface ApplicationListItemDto {
+  id: number;
+  applicantEmail: string;
+  status: string;
+  experience: string;
+  salaryExpectation: string;
+  skills: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const UpdateApplicationStatusSchema = z
+  .object({
+    status: z.enum(["HIRED", "REJECTED"]),
+  })
+  .strict();
+
+export type UpdateApplicationStatusRequestDto = z.infer<typeof UpdateApplicationStatusSchema>;
+
+export interface UpdateApplicationStatusResponseDto {
+  application: ApplicationListItemDto;
+  numberOfOpenPositions: number | null;
+}

@@ -30,9 +30,11 @@ export function validateBody(schema: ZodSchema): RequestHandler {
   };
 }
 
-export const idParamSchema = z.object({
-  id: z
-    .string()
-    .regex(/^[1-9]\d*$/, "Id must be a positive integer")
-    .transform(Number),
+const positiveIdSchema = z.string().regex(/^[1-9]\d*$/, "Id must be a positive integer");
+
+export const idParamSchema = z.object({ id: positiveIdSchema });
+
+export const applicationParamsSchema = z.object({
+  id: positiveIdSchema,
+  applicationId: positiveIdSchema,
 });

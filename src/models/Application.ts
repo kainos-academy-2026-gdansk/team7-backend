@@ -15,3 +15,20 @@ export type ApplicationWithRelations = Prisma.ApplicationGetPayload<{
     };
   };
 }>;
+export type ApplicationListItemPayload = Prisma.ApplicationGetPayload<{
+  select: {
+    id: true;
+    experience: true;
+    salaryExpectation: true;
+    skills: true;
+    createdAt: true;
+    updatedAt: true;
+    applicant: { select: { email: true } };
+    status: { select: { statusName: true } };
+  };
+}>;
+
+export interface UpdateApplicationStatusResult {
+  application: ApplicationListItemPayload;
+  numberOfOpenPositions: number | null;
+}

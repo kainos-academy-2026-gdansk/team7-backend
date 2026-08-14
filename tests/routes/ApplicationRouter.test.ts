@@ -331,3 +331,126 @@ describe("GET /api/applications", () => {
     expect(adminResponse.status).toBe(403);
   });
 });
+
+async function createApplicationForAssessment(numberOfOpenPositions: number | null) {
+  const role = await createJobRole({ numberOfOpenPositions });
+  const applicant = await prisma.user.create({
+    data: {
+      email: `assessment-applicant-${role.id}@example.com`,
+      passwordHash: "not-used-in-route-tests",
+      role: Role.USER,
+    },
+  });
+  const application = await prisma.application.create({
+    data: {
+      applicantId: applicant.id,
+      jobRoleId: role.id,
+      statusId: inProgressStatusId,
+      ...applicationBody,
+    },
+  });
+  return { role, application, applicant };
+}
+
+describe("GET /api/job-roles/:id/applications", () => {
+  it("lists applications for an existing role without exposing credentials", async () => {
+    const { role, application, applicant } = await createApplicationForAssessment(2);
+
+    const response = await request(app)
+      .get(`/api/job-roles/${role.id}/applications`)
+      .set("Authorization", `Bearer ${adminToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([
+      expect.objectContaining({
+        id: application.id,
+        applicantEmail: applicant.email,
+        status: "IN_PROGRESS",
+      }),
+    ]);
+    expect(response.body[0]).not.toHaveProperty("passwordHash");
+  });
+
+  it("returns an empty list, not found, validation, and authorization responses", async () => {
+    const role = await createJobRole();
+    expect(
+      (
+        await request(app)
+          .get(`/api/job-roles/${role.id}/applications`)
+          .set("Authorization", `Bearer ${adminToken}`)
+      ).body,
+    ).toEqual([]);
+    expect(
+      (
+        await request(app)
+          .get("/api/job-roles/999999/applications")
+          .set("Authorization", `Bearer ${adminToken}`)
+      ).status,
+    ).toBe(404);
+    expect(
+      (
+        await request(app)
+          .get("/api/job-roles/not-an-id/applications")
+          .set("Authorization", `Bearer ${adminToken}`)
+      ).status,
+    ).toBe(400);
+    expect((await request(app).get(`/api/job-roles/${role.id}/applications`)).status).toBe(401);
+    expect(
+      (
+        await request(app)
+          .get(`/api/job-roles/${role.id}/applications`)
+          .set("Authorization", `Bearer ${userToken}`)
+      ).status,
+    ).toBe(403);
+  });
+});
+
+describe("PATCH /api/job-roles/:id/applications/:applicationId", () => {
+  it("hires an application and decrements open positions", async () => {
+    const { role, application } = await createApplicationForAssessment(1);
+    const response = await request(app)
+      .patch(`/api/job-roles/${role.id}/applications/${application.id}`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ status: "HIRED" });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      application: { id: application.id, status: "HIRED" },
+      numberOfOpenPositions: 0,
+    });
+  });
+
+  it("rejects without changing open positions", async () => {
+    const { role, application } = await createApplicationForAssessment(2);
+    const response = await request(app)
+      .patch(`/api/job-roles/${role.id}/applications/${application.id}`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ status: "REJECTED" });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      application: { status: "REJECTED" },
+      numberOfOpenPositions: 2,
+    });
+  });
+
+  it("rejects unavailable positions and invalid status input", async () => {
+    const { role, application } = await createApplicationForAssessment(0);
+    expect(
+      (
+        await request(app)
+          .patch(`/api/job-roles/${role.id}/applications/${application.id}`)
+          .set("Authorization", `Bearer ${adminToken}`)
+          .send({ status: "HIRED" })
+      ).status,
+    ).toBe(409);
+    expect(
+      (
+        await request(app)
+          .patch(`/api/job-roles/${role.id}/applications/${application.id}`)
+          .set("Authorization", `Bearer ${adminToken}`)
+          .send({ status: "OPEN" })
+      ).status,
+    ).toBe(400);
+  });
+});
