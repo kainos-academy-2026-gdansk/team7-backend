@@ -16,8 +16,8 @@ No secrets, no personal data, no per-ticket noise.
   require an `ADMIN` token; GET and reference-data routes remain public by intentional partial scope.
 - Applications: `Application` links a `User` applicant to a `JobRole` and the shared `Status` table;
   it requires experience (`VARCHAR(1000)`), salary expectation (`VARCHAR(100)`), and skills
-  (`VARCHAR(2000)`). CV/S3 fields and application API behavior remain deferred under
-  `US050/US051-database`.
+  (`VARCHAR(2000)`). The applicant API creates `IN_PROGRESS` applications and lists each applicant's
+  own applications oldest first; CV/S3 fields remain deferred.
 - Deleting a `JobRole` cascades to its linked `Application` rows at the database level. Confirmation
   and optional applicant notification belong to the later API/UI workflow, not the database migration.
 
@@ -36,6 +36,8 @@ No secrets, no personal data, no per-ticket noise.
 | GET | `/api/statuses` | list, `{ statusId, statusName }` |
 | POST | `/api/auth/register` | `201`, defaults role to `USER` |
 | POST | `/api/auth/login` | `200` with JWT and user DTO; `401` for invalid credentials |
+| POST | `/api/job-roles/:id/apply` | `USER`-only; `201` creates an `IN_PROGRESS` application; `409` for unavailable or duplicate applications |
+| GET | `/api/applications` | `USER`-only; `200` returns the authenticated applicant's applications oldest first |
 
 ## Environment
 
@@ -76,3 +78,4 @@ No secrets, no personal data, no per-ticket noise.
 | 2026-08-13 | Added authentication endpoints and partial ADMIN authorization for job-role writes. | [2026-08-13-us024-us040-us041-authentication.md](retrospectives/2026-08-13-us024-us040-us041-authentication.md) |
 | 2026-08-13 | Added the application database model and shared application statuses. | [2026-08-13-US050-US051-database.md](retrospectives/2026-08-13-US050-US051-database.md) |
 | 2026-08-13 | JobRole deletion now cascades linked applications. | [2026-08-13-US050-US051-database.md](retrospectives/2026-08-13-US050-US051-database.md) |
+| 2026-08-13 | Added applicant application creation and own-application listing API; CV/S3 and admin assessment remain out of scope. | [2026-08-13-us050-us053-application-api.md](retrospectives/2026-08-13-us050-us053-application-api.md) |
