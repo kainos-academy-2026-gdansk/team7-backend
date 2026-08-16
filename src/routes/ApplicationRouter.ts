@@ -33,6 +33,13 @@ router.get(
 );
 
 router.get(
+  "/admin/applications",
+  authenticate,
+  authorize(Role.ADMIN),
+  applicationController.getAllApplications,
+);
+
+router.get(
   "/:id/applications",
   authenticate,
   authorize(Role.ADMIN),

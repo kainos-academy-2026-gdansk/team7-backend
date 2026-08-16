@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApplicationController } from "../../src/controllers/ApplicationController";
 import type { ApplicationListItemPayload } from "../../src/models/Application";
+import type { AdminApplicationListItemPayload } from "../../src/models/Application";
 import {
   ApplicationConflictError,
   type ApplicationService,
@@ -10,11 +11,13 @@ import {
 const createApplication = vi.fn();
 const findByApplicantId = vi.fn();
 const findByJobRoleId = vi.fn();
+const findAllForAdmin = vi.fn();
 const updateStatus = vi.fn();
 const applicationServiceMock = {
   createApplication,
   findByApplicantId,
   findByJobRoleId,
+  findAllForAdmin,
   updateStatus,
 } as unknown as ApplicationService;
 
@@ -40,6 +43,10 @@ const applicationListItem: ApplicationListItemPayload = {
   updatedAt: application.updatedAt,
   applicant: { email: "applicant@example.com" },
   status: application.status,
+};
+const adminApplicationListItem: AdminApplicationListItemPayload = {
+  ...applicationListItem,
+  jobRole: { roleName: "Software Engineer" },
 };
 
 describe("ApplicationController", () => {
@@ -153,6 +160,31 @@ describe("ApplicationController", () => {
     await applicationController.getApplicationsByJobRoleId(req, res, next);
     expect(status).toHaveBeenCalledWith(404);
     expect(json).toHaveBeenCalledWith({ message: "Job role not found" });
+  });
+
+  it("returns 200 with every application for admins", async () => {
+    findAllForAdmin.mockResolvedValue([adminApplicationListItem]);
+
+    await applicationController.getAllApplications(req, res, next);
+
+    expect(findAllForAdmin).toHaveBeenCalledWith();
+    expect(status).toHaveBeenCalledWith(200);
+    expect(json).toHaveBeenCalledWith([
+      expect.objectContaining({
+        jobRoleName: "Software Engineer",
+        applicantEmail: "applicant@example.com",
+        status: "IN_PROGRESS",
+      }),
+    ]);
+  });
+
+  it("forwards unexpected failures when listing every application", async () => {
+    const error = new Error("Database failure");
+    findAllForAdmin.mockRejectedValue(error);
+
+    await applicationController.getAllApplications(req, res, next);
+
+    expect(next).toHaveBeenCalledWith(error);
   });
 
   it("updates an application status", async () => {

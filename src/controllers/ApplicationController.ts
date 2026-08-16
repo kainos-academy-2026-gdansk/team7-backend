@@ -66,6 +66,21 @@ export class ApplicationController {
     }
   };
 
+  getAllApplications = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const applications = await this.applicationService.findAllForAdmin();
+      res
+        .status(200)
+        .json(
+          applications.map((application) =>
+            ApplicationMapper.toAdminApplicationListItemDto(application),
+          ),
+        );
+    } catch (error) {
+      next(error);
+    }
+  };
+
   getMyApplications = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const applicantId = req.user?.sub;

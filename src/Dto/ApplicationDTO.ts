@@ -44,6 +44,18 @@ export interface ApplicationListItemDto {
   updatedAt: string;
 }
 
+export interface AdminApplicationListItemDto {
+  id: number;
+  jobRoleName: string;
+  applicantEmail: string;
+  status: string;
+  experience: string;
+  salaryExpectation: string;
+  skills: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const UpdateApplicationStatusSchema = z
   .object({
     status: z.enum(["HIRED", "REJECTED"]),

@@ -454,3 +454,83 @@ describe("PATCH /api/job-roles/:id/applications/:applicationId", () => {
     ).toBe(400);
   });
 });
+
+describe("GET /api/admin/applications", () => {
+  it("lists applications across every job role newest first without exposing credentials", async () => {
+    const firstRole = await createJobRole();
+    const secondRole = await createJobRole();
+    const olderCreatedAt = new Date("2026-08-03T10:00:00.000Z");
+    const newerCreatedAt = new Date("2026-08-04T10:00:00.000Z");
+
+    const older = await prisma.application.create({
+      data: {
+        applicantId: userId,
+        jobRoleId: firstRole.id,
+        statusId: inProgressStatusId,
+        ...applicationBody,
+        createdAt: olderCreatedAt,
+        updatedAt: olderCreatedAt,
+      },
+    });
+    const newer = await prisma.application.create({
+      data: {
+        applicantId: secondUserId,
+        jobRoleId: secondRole.id,
+        statusId: inProgressStatusId,
+        ...applicationBody,
+        createdAt: newerCreatedAt,
+        updatedAt: newerCreatedAt,
+      },
+    });
+
+    const response = await request(app)
+      .get("/api/admin/applications")
+      .set("Authorization", `Bearer ${adminToken}`);
+
+    expect(response.status).toBe(200);
+    const relevantItems = response.body.filter((item: { id: number }) =>
+      [older.id, newer.id].includes(item.id),
+    );
+    expect(relevantItems).toEqual([
+      {
+        id: newer.id,
+        jobRoleName: secondRole.roleName,
+        applicantEmail: "second-application-user@example.com",
+        status: "IN_PROGRESS",
+        experience: applicationBody.experience,
+        salaryExpectation: applicationBody.salaryExpectation,
+        skills: applicationBody.skills,
+        createdAt: newerCreatedAt.toISOString(),
+        updatedAt: newerCreatedAt.toISOString(),
+      },
+      {
+        id: older.id,
+        jobRoleName: firstRole.roleName,
+        applicantEmail: "application-user@example.com",
+        status: "IN_PROGRESS",
+        experience: applicationBody.experience,
+        salaryExpectation: applicationBody.salaryExpectation,
+        skills: applicationBody.skills,
+        createdAt: olderCreatedAt.toISOString(),
+        updatedAt: olderCreatedAt.toISOString(),
+      },
+    ]);
+  });
+
+  it("returns an empty list, 401, and 403 responses", async () => {
+    const emptyResponse = await request(app)
+      .get("/api/admin/applications")
+      .set("Authorization", `Bearer ${adminToken}`);
+    expect(emptyResponse.status).toBe(200);
+    expect(Array.isArray(emptyResponse.body)).toBe(true);
+
+    expect((await request(app).get("/api/admin/applications")).status).toBe(401);
+    expect(
+      (
+        await request(app)
+          .get("/api/admin/applications")
+          .set("Authorization", `Bearer ${userToken}`)
+      ).status,
+    ).toBe(403);
+  });
+});

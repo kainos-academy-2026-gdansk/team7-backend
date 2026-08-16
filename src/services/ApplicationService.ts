@@ -2,6 +2,7 @@ import { Prisma, type PrismaClient } from "@prisma/client";
 import type { CreateApplicationRequestDto } from "../Dto/ApplicationDTO";
 import { ConflictError } from "../lib/HttpError";
 import type {
+  AdminApplicationListItemPayload,
   ApplicationListItemPayload,
   ApplicationWithRelations,
   UpdateApplicationStatusResult,
@@ -103,6 +104,23 @@ export class ApplicationService {
         status: { select: { statusName: true } },
       },
       orderBy: { createdAt: "asc" },
+    });
+  }
+
+  async findAllForAdmin(): Promise<AdminApplicationListItemPayload[]> {
+    return await this.prismaClient.application.findMany({
+      select: {
+        id: true,
+        experience: true,
+        salaryExpectation: true,
+        skills: true,
+        createdAt: true,
+        updatedAt: true,
+        applicant: { select: { email: true } },
+        status: { select: { statusName: true } },
+        jobRole: { select: { roleName: true } },
+      },
+      orderBy: { createdAt: "desc" },
     });
   }
 

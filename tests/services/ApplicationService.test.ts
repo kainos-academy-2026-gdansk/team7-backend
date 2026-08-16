@@ -1,7 +1,10 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ConflictError } from "../../src/lib/HttpError";
-import type { ApplicationListItemPayload } from "../../src/models/Application";
+import type {
+  AdminApplicationListItemPayload,
+  ApplicationListItemPayload,
+} from "../../src/models/Application";
 import {
   ApplicationConflictError,
   ApplicationService,
@@ -66,6 +69,10 @@ const applicationListItem: ApplicationListItemPayload = {
   updatedAt: application.updatedAt,
   applicant: { email: "applicant@example.com" },
   status: application.status,
+};
+const adminApplicationListItem: AdminApplicationListItemPayload = {
+  ...applicationListItem,
+  jobRole: { roleName: "Software Engineer" },
 };
 
 describe("ApplicationService", () => {
@@ -232,6 +239,36 @@ describe("ApplicationService", () => {
         },
         orderBy: { createdAt: "asc" },
       });
+    });
+  });
+
+  describe("findAllForAdmin", () => {
+    it("returns every application newest first with job role names", async () => {
+      findApplications.mockResolvedValue([adminApplicationListItem]);
+
+      await expect(applicationService.findAllForAdmin()).resolves.toEqual([
+        adminApplicationListItem,
+      ]);
+      expect(findApplications).toHaveBeenCalledWith({
+        select: {
+          id: true,
+          experience: true,
+          salaryExpectation: true,
+          skills: true,
+          createdAt: true,
+          updatedAt: true,
+          applicant: { select: { email: true } },
+          status: { select: { statusName: true } },
+          jobRole: { select: { roleName: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+    });
+
+    it("returns an empty array when there are no applications", async () => {
+      findApplications.mockResolvedValue([]);
+
+      await expect(applicationService.findAllForAdmin()).resolves.toEqual([]);
     });
   });
 
