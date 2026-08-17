@@ -28,9 +28,9 @@ No secrets, no personal data, no per-ticket noise.
 | GET | `/health` | `{ status: "UP", timestamp }` |
 | GET | `/api/job-roles` | list, summary shape |
 | GET | `/api/job-roles/:id` | detailed shape, `404` when missing |
-| POST | `/api/job-roles` | `201` |
-| PUT | `/api/job-roles/:id` | full update, `200` / `404` |
-| DELETE | `/api/job-roles/:id` | `204` empty body / `404` |
+| POST | `/api/admin/job-roles` | ADMIN only; `201` |
+| PUT | `/api/admin/job-roles/:id` | ADMIN only; full update, `200` / `404` |
+| DELETE | `/api/admin/job-roles/:id` | ADMIN only; `204` empty body / `404` |
 | GET | `/api/bands` | list |
 | GET | `/api/capabilities` | list |
 | GET | `/api/statuses` | list, `{ statusId, statusName }` |
@@ -38,8 +38,9 @@ No secrets, no personal data, no per-ticket noise.
 | POST | `/api/auth/login` | `200` with JWT and user DTO; `401` for invalid credentials |
 | POST | `/api/job-roles/:id/apply` | `USER`-only; `201` creates an `IN_PROGRESS` application; `409` for unavailable or duplicate applications |
 | GET | `/api/applications` | `USER`-only; `200` returns the authenticated applicant's applications oldest first |
-| GET | `/api/job-roles/:id/applications` | ADMIN only; list applications for one role |
-| PATCH | `/api/job-roles/:id/applications/:applicationId` | ADMIN only; transition `IN_PROGRESS` to `HIRED`/`REJECTED` |
+| GET | `/api/admin/applications` | ADMIN only; list every application across all job roles, newest first |
+| GET | `/api/admin/job-roles/:id/applications` | ADMIN only; list applications for one role |
+| PATCH | `/api/admin/job-roles/:id/applications/:applicationId` | ADMIN only; transition `IN_PROGRESS` to `HIRED`/`REJECTED` |
 
 ## Environment
 
@@ -62,6 +63,9 @@ No secrets, no personal data, no per-ticket noise.
   the same status name ends up with different `statusId` values per environment.
 - Services take `PrismaClient` through the constructor; wiring happens in the router file.
 - There is no `vitest.config.ts`; Vitest config lives under the `vitest` key in `package.json`.
+- All ADMIN-gated routes (job-role writes, application assessment) are consolidated in
+  `src/routes/AdminRouter.ts`, mounted once at `/api/admin` in `app.ts`. A resource's own router (e.g.
+  `JobRoleRouter.ts`) keeps only its public routes.
 
 ## Known gaps / follow-ups
 
@@ -74,6 +78,9 @@ No secrets, no personal data, no per-ticket noise.
 - No E2E suite; validation stops at route-level integration tests.
 - No `.env.example` in the repository.
 - No pagination or filtering on `GET /api/job-roles`.
+- `ApplicationRouter` (USER-only: apply, list own applications) is still mounted at both `/api` and
+  `/api/job-roles` in `app.ts`, so those two routes remain reachable under either prefix — not a
+  security issue, but a candidate for a routing cleanup.
 
 ## Changelog of this file
 
@@ -85,3 +92,4 @@ No secrets, no personal data, no per-ticket noise.
 | 2026-08-13 | JobRole deletion now cascades linked applications. | [2026-08-13-US050-US051-database.md](retrospectives/2026-08-13-US050-US051-database.md) |
 | 2026-08-13 | Added applicant application creation and own-application listing API; CV/S3 and admin assessment remain out of scope. | [2026-08-13-us050-us053-application-api.md](retrospectives/2026-08-13-us050-us053-application-api.md) |
 | 2026-08-13 | Added ADMIN application assessment list and hire/reject workflow. | [2026-08-13-US051-assess-role-applications.md](retrospectives/2026-08-13-US051-assess-role-applications.md) |
+| 2026-08-17 | Consolidated three rounds of endpoint drift: added `GET /api/admin/applications`, moved job-role-applications GET/PATCH under `/api/admin`, and moved job-role write routes (POST/PUT/DELETE) under `/api/admin/job-roles`. | [2026-08-17-us051-job-role-admin-router.md](retrospectives/2026-08-17-us051-job-role-admin-router.md), [2026-08-17-US051-admin-router-extraction.md](retrospectives/2026-08-17-US051-admin-router-extraction.md), [2026-08-16-US051-admin-application-queue.md](retrospectives/2026-08-16-US051-admin-application-queue.md) |
