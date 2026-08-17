@@ -1,5 +1,7 @@
+import type { AdminApplicationListItemDto } from "../Dto/ApplicationDTO";
 import type { ApplicationResponseDto } from "../Dto/ApplicationDTO";
 import type { ApplicationListItemDto } from "../Dto/ApplicationDTO";
+import type { AdminApplicationListItemPayload } from "../models/Application";
 import type { ApplicationWithRelations } from "../models/Application";
 import type { ApplicationListItemPayload } from "../models/Application";
 
@@ -28,6 +30,22 @@ export class ApplicationMapper {
       salaryExpectation: application.salaryExpectation,
       skills: application.skills,
 
+      createdAt: application.createdAt.toISOString(),
+      updatedAt: application.updatedAt.toISOString(),
+    };
+  }
+
+  static toAdminApplicationListItemDto(
+    application: AdminApplicationListItemPayload,
+  ): AdminApplicationListItemDto {
+    return {
+      id: application.id,
+      jobRoleName: application.jobRole.roleName,
+      applicantEmail: application.applicant.email,
+      status: application.status.statusName,
+      experience: application.experience,
+      salaryExpectation: application.salaryExpectation,
+      skills: application.skills,
       createdAt: application.createdAt.toISOString(),
       updatedAt: application.updatedAt.toISOString(),
     };
