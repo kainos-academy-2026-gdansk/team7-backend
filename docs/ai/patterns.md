@@ -13,19 +13,40 @@ const jobRoleController = new JobRoleController(jobRoleService);
 
 router.get("/", jobRoleController.getAll);
 router.get("/:id", validateParams(idParamSchema), jobRoleController.getJobRoleById);
-router.post("/", validateBody(AddJobRoleSchema), jobRoleController.addJobRole);
-router.put(
-  "/:id",
-  validateParams(idParamSchema),
-  validateBody(updateJobRoleSchema),
-  jobRoleController.updateJobRole,
-);
-router.delete("/:id", validateParams(idParamSchema), jobRoleController.deleteJobRole);
 
 export default router;
 ```
 
-Params middleware first, then body middleware, then the controller method.
+Params middleware first, then body middleware, then the controller method. ADMIN-gated writes for a
+resource live in `AdminRouter.ts`, not in the resource's own router:
+
+```ts
+// AdminRouter.ts, mounted at /api/admin in app.ts
+router.post(
+  "/job-roles",
+  authenticate,
+  authorize(Role.ADMIN),
+  validateBody(AddJobRoleSchema),
+  jobRoleController.addJobRole,
+);
+router.put(
+  "/job-roles/:id",
+  authenticate,
+  authorize(Role.ADMIN),
+  validateParams(idParamSchema),
+  validateBody(updateJobRoleSchema),
+  jobRoleController.updateJobRole,
+);
+router.delete(
+  "/job-roles/:id",
+  authenticate,
+  authorize(Role.ADMIN),
+  validateParams(idParamSchema),
+  jobRoleController.deleteJobRole,
+);
+```
+
+`authenticate` then `authorize(Role.ADMIN)` come before params/body validation.
 
 ## Controller: arrow-function handlers, HTTP only
 
