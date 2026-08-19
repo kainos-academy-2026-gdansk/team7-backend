@@ -133,3 +133,83 @@ handover notes that a human posts or approves.
 
 **Alternatives.** Full write access (rejected: no human gate); no integration (rejected: loses the
 value of task context in intake).
+
+---
+
+## ADR-008 · 2026-08-13 · Development authentication bootstrap credentials are not production credentials
+
+**Status:** Accepted
+
+**Context.** Local and Postman verification needs a development ADMIN account, but a reusable password
+literal in seed code can be mistaken for a deployment credential.
+
+**Decision.** The seeded ADMIN account is development-only and must never be reused in production.
+Bootstrap credentials must be moved to an environment-provided value before production use; secrets
+must not be committed to source or documentation.
+
+**Consequences.** Local setup needs an explicit credential configuration step, and the current literal
+seed password remains a follow-up to replace before deployment.
+
+**Alternatives.** Keep a shared literal (rejected: predictable and easy to reuse); add a public promotion
+endpoint (rejected: privilege-escalation risk and outside the story scope).
+
+---
+
+## ADR-009 · 2026-08-13 · Reuse the Status table for application lifecycle states
+
+**Status:** Accepted
+
+**Context.** US050/US051 requires application states, while the repository already uses a shared
+`Status` lookup table for JobRole states. The database-only scope does not justify a second lookup
+table or a new enum.
+
+**Decision.** Store `Application.statusId` as a foreign key to `Status`. Keep `OPEN` and `CLOSED` for
+JobRole and add `IN_PROGRESS`, `HIRED`, and `REJECTED` for Application in the application migration.
+Application services must validate the status names allowed for their entity.
+
+**Consequences.** One lookup table is reused and status IDs remain environment-independent when
+resolved by name, but the database FK alone cannot prevent a JobRole from referencing an application
+status or an Application from referencing a JobRole status.
+
+**Alternatives.** New `ApplicationStatus` enum (rejected: user requested the existing table); separate
+application status table (rejected: unnecessary duplication for the current scope).
+
+---
+
+## ADR-010 · 2026-08-13 · Deleting a JobRole cascades linked applications
+
+**Status:** Accepted
+
+**Context.** US050/US051 permits a recruitment admin to remove a JobRole, and the product decision is
+that all applications connected to that role should be removed as well. The existing application FK
+used `RESTRICT`, which would have exposed an uncontrolled database error from the existing delete path.
+
+**Decision.** Configure `Application.jobRoleId` with `ON DELETE CASCADE`. Keep `Application.applicantId`
+and `Application.statusId` restrictive. The later API/UI workflow must require explicit admin confirmation
+before deletion; optional notifications are a post-commit concern and are outside this database change.
+
+**Consequences.** Role deletion is atomic and cannot leave orphaned applications, but application history
+is permanently removed. A future archive/soft-delete policy would require a deliberate schema change.
+
+**Alternatives.** Keep `RESTRICT` (rejected: deletion fails after applications exist); soft delete/archive
+(deferred: product explicitly chose deletion for this workflow).
+
+---
+
+## ADR-011 · 2026-08-13 · Application assessment transitions are transactional
+
+**Status:** Accepted
+
+**Context.** Hiring changes an application's status and the related JobRole's position count. Separate
+updates could leave the records inconsistent or allow a repeated/concurrent transition to decrement
+positions more than once.
+
+**Decision.** Resolve application status IDs by name and perform HIRE/REJECT transitions in a Prisma
+transaction. Only `IN_PROGRESS` applications may change; HIRE also conditionally decrements a positive
+position count. Invalid transitions and unavailable positions return `409`.
+
+**Consequences.** The operation is atomic and safe against stale state at the update boundary. The
+shared Status table still requires service-level validation; automatic JobRole closure remains US055.
+
+**Alternatives.** Independent updates (rejected: partial-write risk); frontend-only state check
+(rejected: clients cannot enforce database integrity).

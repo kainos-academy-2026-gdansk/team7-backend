@@ -4,6 +4,8 @@ import type { AddJobRoleDto, UpdateJobRoleRequestDTO } from "../Dto/JobRoleDTO";
 import type { JobRoleGetAllSelectPayload, JobRoleWithRelations } from "../models/JobRole";
 import type { JobRoleDetailed } from "../models/JobRole";
 
+const DEFAULT_STATUS_NAME = "OPEN";
+
 export class JobRoleService {
   private prismaClient: PrismaClient;
 
@@ -18,7 +20,11 @@ export class JobRoleService {
         roleName: true,
         location: true,
         closingDate: true,
-        status: true,
+        status: {
+          select: {
+            statusName: true,
+          },
+        },
         band: {
           select: {
             name: true,
@@ -39,6 +45,7 @@ export class JobRoleService {
       include: {
         band: true,
         capability: true,
+        status: true,
       },
     });
 
@@ -65,18 +72,19 @@ export class JobRoleService {
       data: {
         roleName: data.jobRoleName,
         location: data.location,
-        status: data.status,
         description: data.description,
         responsibilities: data.responsibilities,
-        sharePointLink: data.sharePointLink,
-        openPositions: data.openPositions,
+        sharepointUrl: data.sharepointUrl,
+        numberOfOpenPositions: data.numberOfOpenPositions,
         closingDate: data.closingDate,
+        status: { connect: { statusId: data.statusId } },
         band: { connect: { name: data.bandName } },
         capability: { connect: { name: data.capabilityName } },
       },
       include: {
         band: true,
         capability: true,
+        status: true,
       },
     });
 
@@ -84,11 +92,15 @@ export class JobRoleService {
   }
 
   private async assertRelationsExist(data: UpdateJobRoleRequestDTO): Promise<void> {
-    const [band, capability] = await Promise.all([
+    const [band, capability, status] = await Promise.all([
       this.prismaClient.band.findUnique({ where: { name: data.bandName }, select: { id: true } }),
       this.prismaClient.capability.findUnique({
         where: { name: data.capabilityName },
         select: { id: true },
+      }),
+      this.prismaClient.status.findUnique({
+        where: { statusId: data.statusId },
+        select: { statusId: true },
       }),
     ]);
 
@@ -109,6 +121,14 @@ export class JobRoleService {
         input: data.capabilityName,
       });
     }
+    if (!status) {
+      issues.push({
+        code: "custom",
+        path: ["statusId"],
+        message: `Status "${data.statusId}" does not exist`,
+        input: data.statusId,
+      });
+    }
 
     if (issues.length > 0) {
       throw new ZodError(issues);
@@ -116,40 +136,52 @@ export class JobRoleService {
   }
 
   private static toDetailed(
-    entity: Prisma.JobRoleGetPayload<{ include: { band: true; capability: true } }>,
+    entity: Prisma.JobRoleGetPayload<{
+      include: { band: true; capability: true; status: true };
+    }>,
   ): JobRoleDetailed {
     return {
       id: entity.id,
       jobRoleName: entity.roleName,
       description: entity.description,
       responsibilities: entity.responsibilities ?? "",
-      link: entity.sharePointLink,
+      sharepointUrl: entity.sharepointUrl,
       location: entity.location,
       capability: entity.capability,
       band: entity.band,
       closingDate: entity.closingDate,
       status: entity.status,
-      numberOfOpenPositions: entity.openPositions ?? 0,
+      numberOfOpenPositions: entity.numberOfOpenPositions ?? 0,
     };
   }
 
   async createJobRole(data: AddJobRoleDto): Promise<JobRoleWithRelations> {
+    const openStatus = await this.prismaClient.status.findUnique({
+      where: { statusName: DEFAULT_STATUS_NAME },
+      select: { statusId: true },
+    });
+
+    if (!openStatus) {
+      throw new Error(`Status "${DEFAULT_STATUS_NAME}" is not configured`);
+    }
+
     return await this.prismaClient.jobRole.create({
       data: {
         roleName: data.roleName,
         location: data.location,
         closingDate: data.closingDate,
-        status: "OPEN",
+        statusId: openStatus.statusId,
         description: data.description,
         responsibilities: data.responsibilities,
-        openPositions: data.openPositions,
-        sharePointLink: data.sharePointLink,
+        numberOfOpenPositions: data.numberOfOpenPositions,
+        sharepointUrl: data.sharepointUrl,
         bandId: data.bandId,
         capabilityId: data.capabilityId,
       },
       include: {
         band: true,
         capability: true,
+        status: true,
       },
     });
   }

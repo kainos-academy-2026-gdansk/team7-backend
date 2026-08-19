@@ -75,11 +75,34 @@ Rules learned the hard way:
 - Assert behaviour, not implementation details: status codes, response bodies, persisted rows.
 - Test names read as sentences: `"returns 404 when the job role does not exist"`.
 - Use `it.each([...])` for field-by-field validation cases (already used in the DTO and middleware tests).
+- When mocking Prisma relations, match the exact nested shape produced by the service's `select` or
+  `include` query, for example `status: { statusName: "OPEN" }` rather than a flat `statusName` field.
+- Resolve database-derived IDs inside test bodies or runtime setup helpers; do not capture values from
+  `beforeAll` in top-level `it.each` data because the cases are evaluated before setup runs.
 - Never delete or `skip` a test to make the suite green. A red test is a finding for the handover.
 - Do not assert version-specific Zod internals; assert `field` and `message` from `toFieldErrors`.
+- Validate structured manual-test artifacts such as Postman collections with a native JSON validator
+  immediately after edits and before manual API verification.
 
 ## Known gaps
 
 - No E2E layer. Record E2E as **N/A** in handovers.
 - No coverage threshold is enforced in CI; report coverage changes manually if they matter.
 - Container startup dominates suite runtime; keep route tests focused on paths that need a real DB.
+
+## Native and security dependencies
+
+- When adding a native or security-sensitive dependency, verify both `npm ci` in the production image
+  dependency stage and the complete image build. Record package-install success separately from later
+  build failures such as certificate or ORM-engine download errors.
+
+## Database-only migrations
+
+- For migrations that add lookup data, generate them with `--create-only`, inspect the SQL, then apply
+  them. Verify fresh-database deployment, migration status, lookup rows, column sizes, constraints, and
+  indexes separately from the application test suite.
+
+## Seeded workflow scenarios
+
+- When Postman requests depend on seeded records, use idempotent seed upserts to restore the scenario's
+  starting state and have a collection request capture the generated resource IDs before mutations.

@@ -11,6 +11,15 @@ No secrets, no personal data, no per-ticket noise.
 - Consumed by a separate frontend repository; this repo serves JSON only.
 - Core entities: `JobRole` (with `status` OPEN/CLOSED, `responsibilities`), `Band`, `Capability`.
   `JobRole` belongs to one `Band` and one `Capability`. `Band.name` and `Capability.name` are unique.
+- Authentication: `POST /api/auth/register` creates a `USER` with an Argon2 password hash;
+  `POST /api/auth/login` returns a JWT for the `Authorization: Bearer` header. Job-role POST/PUT/DELETE
+  require an `ADMIN` token; GET and reference-data routes remain public by intentional partial scope.
+- Applications: `Application` links a `User` applicant to a `JobRole` and the shared `Status` table;
+  it requires experience (`VARCHAR(1000)`), salary expectation (`VARCHAR(100)`), and skills
+  (`VARCHAR(2000)`). The applicant API creates `IN_PROGRESS` applications and lists each applicant's
+  own applications oldest first; CV/S3 fields remain deferred.
+- Deleting a `JobRole` cascades to its linked `Application` rows at the database level. Confirmation
+  and optional applicant notification belong to the later API/UI workflow, not the database migration.
 
 ## Endpoints (current)
 
@@ -19,16 +28,24 @@ No secrets, no personal data, no per-ticket noise.
 | GET | `/health` | `{ status: "UP", timestamp }` |
 | GET | `/api/job-roles` | list, summary shape |
 | GET | `/api/job-roles/:id` | detailed shape, `404` when missing |
-| POST | `/api/job-roles` | `201` |
-| PUT | `/api/job-roles/:id` | full update, `200` / `404` |
-| DELETE | `/api/job-roles/:id` | `204` empty body / `404` |
+| POST | `/api/admin/job-roles` | ADMIN only; `201` |
+| PUT | `/api/admin/job-roles/:id` | ADMIN only; full update, `200` / `404` |
+| DELETE | `/api/admin/job-roles/:id` | ADMIN only; `204` empty body / `404` |
 | GET | `/api/bands` | list |
 | GET | `/api/capabilities` | list |
+| GET | `/api/statuses` | list, `{ statusId, statusName }` |
+| POST | `/api/auth/register` | `201`, defaults role to `USER` |
+| POST | `/api/auth/login` | `200` with JWT and user DTO; `401` for invalid credentials |
+| POST | `/api/job-roles/:id/apply` | `USER`-only; `201` creates an `IN_PROGRESS` application; `409` for unavailable or duplicate applications |
+| GET | `/api/applications` | `USER`-only; `200` returns the authenticated applicant's applications oldest first |
+| GET | `/api/admin/applications` | ADMIN only; list every application across all job roles, newest first |
+| GET | `/api/admin/job-roles/:id/applications` | ADMIN only; list applications for one role |
+| PATCH | `/api/admin/job-roles/:id/applications/:applicationId` | ADMIN only; transition `IN_PROGRESS` to `HIRED`/`REJECTED` |
 
 ## Environment
 
-- Node.js 22+, PostgreSQL 16. `.env` holds `DATABASE_URL`, `PORT`, `NODE_ENV`; it is git-ignored and
-  must never be read into chat or logs.
+- Node.js 22+, PostgreSQL 16. `.env` holds `DATABASE_URL`, `PORT`, `NODE_ENV`, and the required
+  `JWT_SECRET`; it is git-ignored and must never be read into chat or logs.
 - `docker compose up -d db` starts PostgreSQL 16 for local development; the API then runs with
   `npm run dev`. The `backend` compose service simulates production and is not used while developing.
 - Route tests need a running Docker daemon — they start a `postgres:16-alpine` Testcontainer.
@@ -41,18 +58,38 @@ No secrets, no personal data, no per-ticket noise.
 - `src/Dto/` is capitalised (not `dto/` or `dtos/`). Filenames are PascalCase matching the export.
 - Validation middleware validates but **does not** mutate `req`, so controllers still do
   `Number(req.params.id)` after `validateParams(idParamSchema)`.
+- `Status` rows (`OPEN`, `CLOSED`) are owned by migration `20260812120000_job_role_status_table`.
+  `prisma/seed.ts` reads them and fails loudly if they are missing — it must never create them, or
+  the same status name ends up with different `statusId` values per environment.
 - Services take `PrismaClient` through the constructor; wiring happens in the router file.
 - There is no `vitest.config.ts`; Vitest config lives under the `vitest` key in `package.json`.
+- All ADMIN-gated routes (job-role writes, application assessment) are consolidated in
+  `src/routes/AdminRouter.ts`, mounted once at `/api/admin` in `app.ts`. A resource's own router (e.g.
+  `JobRoleRouter.ts`) keeps only its public routes.
 
 ## Known gaps / follow-ups
 
-- No authentication or authorisation layer yet — every endpoint is public.
+- Full blanket authentication is still deferred: only job-role write endpoints are protected; GET and reference-data endpoints remain public.
+- Application statuses are `IN_PROGRESS`, `HIRED`, and `REJECTED`; JobRole statuses remain `OPEN` and
+  `CLOSED`. The shared table requires service-level status-domain validation.
+- Hiring is transactional: it requires an IN_PROGRESS application and an open position, then changes
+  the application to HIRED and decrements positions. Rejection leaves positions unchanged; invalid
+  transitions and unavailable positions return 409.
 - No E2E suite; validation stops at route-level integration tests.
 - No `.env.example` in the repository.
 - No pagination or filtering on `GET /api/job-roles`.
+- `ApplicationRouter` (USER-only: apply, list own applications) is still mounted at both `/api` and
+  `/api/job-roles` in `app.ts`, so those two routes remain reachable under either prefix — not a
+  security issue, but a candidate for a routing cleanup.
 
 ## Changelog of this file
 
 | Date | Entry | Source |
 | ---- | ----- | ------ |
 | 2026-08-12 | Initial memory captured while introducing the agentic workflow. | [2026-08-12-us-020-delete-a-role.md](retrospectives/2026-08-12-us-020-delete-a-role.md) |
+| 2026-08-13 | Added authentication endpoints and partial ADMIN authorization for job-role writes. | [2026-08-13-us024-us040-us041-authentication.md](retrospectives/2026-08-13-us024-us040-us041-authentication.md) |
+| 2026-08-13 | Added the application database model and shared application statuses. | [2026-08-13-US050-US051-database.md](retrospectives/2026-08-13-US050-US051-database.md) |
+| 2026-08-13 | JobRole deletion now cascades linked applications. | [2026-08-13-US050-US051-database.md](retrospectives/2026-08-13-US050-US051-database.md) |
+| 2026-08-13 | Added applicant application creation and own-application listing API; CV/S3 and admin assessment remain out of scope. | [2026-08-13-us050-us053-application-api.md](retrospectives/2026-08-13-us050-us053-application-api.md) |
+| 2026-08-13 | Added ADMIN application assessment list and hire/reject workflow. | [2026-08-13-US051-assess-role-applications.md](retrospectives/2026-08-13-US051-assess-role-applications.md) |
+| 2026-08-17 | Consolidated three rounds of endpoint drift: added `GET /api/admin/applications`, moved job-role-applications GET/PATCH under `/api/admin`, and moved job-role write routes (POST/PUT/DELETE) under `/api/admin/job-roles`. | [2026-08-17-us051-job-role-admin-router.md](retrospectives/2026-08-17-us051-job-role-admin-router.md), [2026-08-17-US051-admin-router-extraction.md](retrospectives/2026-08-17-US051-admin-router-extraction.md), [2026-08-16-US051-admin-application-queue.md](retrospectives/2026-08-16-US051-admin-application-queue.md) |

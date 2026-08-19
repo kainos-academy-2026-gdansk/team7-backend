@@ -8,48 +8,89 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  ADMIN
+  USER
+}
 
-enum JobRoleStatus {
-  OPEN
-  CLOSED
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  applications Application[]
 }
 
 model JobRole {
-  id             Int             @id @default(autoincrement())
-  roleName       String
-  location       String
-  closingDate    DateTime?
-  status         JobRoleStatus
+  id          Int       @id @default(autoincrement())
+  roleName    String
+  location    String
+  closingDate DateTime?
 
-  description    String?
-  openPositions  Int?
-  sharePointLink String?
-  responsibilities String?
+  description           String?
+  responsibilities      String?
+  sharepointUrl         String?
+  numberOfOpenPositions Int?
 
-  bandId         Int
-  capabilityId   Int
+  statusId     Int
+  bandId       Int
+  capabilityId Int
 
-  band           Band           @relation(fields: [bandId], references: [id])
-  capability     Capability     @relation(fields: [capabilityId], references: [id])
+  status     Status     @relation(fields: [statusId], references: [statusId])
+  band       Band       @relation(fields: [bandId], references: [id])
+  capability Capability @relation(fields: [capabilityId], references: [id])
 
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  applications Application[]
 
-  @@index([status])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([statusId])
   @@index([capabilityId])
   @@index([bandId])
 }
 
 model Band {
-  id       Int       @id @default(autoincrement())
-  name     String    @unique
+  id   Int    @id @default(autoincrement())
+  name String @unique
 
   jobRoles JobRole[]
 }
 
 model Capability {
-  id       Int       @id @default(autoincrement())
-  name     String    @unique
+  id   Int    @id @default(autoincrement())
+  name String @unique
 
   jobRoles JobRole[]
+}
+
+model Status {
+  statusId   Int    @id @default(autoincrement())
+  statusName String @unique
+
+  jobRoles JobRole[]
+
+  applications Application[]
+}
+
+model Application {
+  id                 Int      @id @default(autoincrement())
+  applicantId        Int
+  jobRoleId          Int
+  statusId           Int
+  experience         String   @db.VarChar(1000)
+  salaryExpectation  String   @db.VarChar(100)
+  skills             String   @db.VarChar(2000)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  applicant User     @relation(fields: [applicantId], references: [id])
+  jobRole   JobRole  @relation(fields: [jobRoleId], references: [id], onDelete: Cascade)
+  status    Status   @relation(fields: [statusId], references: [statusId])
+
+  @@unique([applicantId, jobRoleId])
+  @@index([jobRoleId, statusId])
 }

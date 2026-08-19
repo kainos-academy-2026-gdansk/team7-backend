@@ -32,9 +32,11 @@ Create a `.env` file in the project root:
 PORT=3000
 NODE_ENV=development
 DATABASE_URL="postgresql://postgres:password@localhost:5432/kainos_work-db?schema=public"
+JWT_SECRET="replace-with-a-long-random-secret"
 ```
 
-`.env` must not be committed to the repository - keep local credentials there only.
+`JWT_SECRET` is required for login and protected job-role endpoints. Use a long random value and
+never commit it. `.env` must not be committed to the repository - keep local credentials there only.
 
 ## Database
 

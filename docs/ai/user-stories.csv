@@ -1,8 +1,907 @@
-id,title,as_a,i_want,so_that,acceptance_criteria,priority,status,dependencies,notes
-US-001-02,View job roles,applicant,to see a list of open job roles,I can find a role to apply for,"Returns 200 with a list of roles; Each item exposes id, role name, band, capability and closing date; Empty list returns 200 with []",High,Done,,"GET /api/job-roles"
-US-002-01,View job role information,applicant,to see the full details of a single job role,I can decide whether to apply,"Returns 200 with the detailed shape for an existing id; Returns 404 {message: Job role not found} for a missing id; Returns 400 for a non-numeric id",High,Done,US-001-02,"GET /api/job-roles/:id"
-US-012-01,Add a new job role,admin,to create a job role,new openings appear on the site,"Valid body returns 201 with the created role; Invalid body returns 400 with field errors; Unknown band or capability returns 400",High,Done,US-001-02,"POST /api/job-roles"
-US-015-01,Update a job role,admin,to edit an existing job role,role information stays accurate,"Valid update returns 200 with the updated role; Missing id returns 404; Invalid body returns 400 with field errors; Full update, not partial",Medium,Done,US-012-01,"PUT /api/job-roles/:id"
-US-020-01,Delete a job role,admin,to delete a job role,closed roles disappear from the site,"Existing id returns 204 with an empty body; Missing id returns 404 {message: Job role not found}; Non-numeric id returns 400 before the service is called",Medium,Done,US-012-01,"DELETE /api/job-roles/:id - see docs/ai/retrospectives/2026-08-12-us-020-delete-a-role.md"
-US-038-01,Linting and formatting,developer,a single lint and format toolchain,the codebase stays consistent,"Biome configured; npm run lint and npm run ci:check available; CI fails on lint errors",Low,Done,,"biome.json"
-US-061-01,Test setup,developer,a working test setup,we can validate changes automatically,"Vitest runs with npm test; app /health endpoint covered; CI runs the suite",Low,Done,,"vitest config lives in package.json"
+﻿Identyfikator zadania;Nazwa zadania;Zasobnik;Cel;Stan;Priorytet;Przypisane do;Utworzona przez;Data utworzenia;Data ukończenia;Data rozpoczęcia;Jest cykliczne;Opóźnienie;Data zakończenia;Ukończone przez;Ukończone elementy listy kontrolnej;Elementy listy kontrolnej;Etykiety;Notatki
+bqTpDgUSd0e184Dbzn8KhJYAC6K6;Problem Statement;C9yhStB6f0Ggpiih72XPC5YAPK_B;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;General;"PROBLEM STATEMENT
+Currently within Kainos there is not one source of truth to view job roles and the relevant information attached (e.g. job descriptions, capability, competencies, banding, training etc) this can be confusing and time consuming for employees to retrieve the relevant job role information.
+VISION
+An online job application that serves both Kainos recruitment admin to retrieve and update job roles and their relevant information and applicants to apply for roles."
+hTnLqDEiSU-KWq3C3SyUIJYAPLyL;Helpful Links;C9yhStB6f0Ggpiih72XPC5YAPK_B;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;General;"Kainos SharePoint -
+https://kainossoftwareltd.sharepoint.com/SitePages/Home.aspx
+Career Lattice - https://kainossoftwareltd.sharepoint.com/sites/Career/SitePages/CareerLattice-Engineering.aspx
+Kainos jobs - https://kainos.wd3.myworkdayjobs.com/Kainos/
+Training courses - https://kainossoftwareltd.sharepoint.com/sites/Development/SitePages/MAP%20Courses.aspx"
+dMaLw_e5NU2B4Xxzi55kVZYADDKC;Minimum Technical Requirements;C9yhStB6f0Ggpiih72XPC5YAPK_B;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;General;"The following is the minimum technical requirements needed to complete this project:
+Main branch must be protected (can't push directly)
+All tickets must have a pull request attached before being moved to ‘In Review’
+Pull requests must be approved by 1 other dev and your tech lead (mentor)
+Tests should run and pass on every pull request before merge
+Tests should run and pass on main branch after PR is merged
+Linting check must pass on every pull request before merge
+No usernames/passwords in source
+Must be able to recreate database in the case of an outage
+Web application should not talk directly to database
+Tests should not be flakey (i.e. pass sometimes)
+All input must be validated
+Sensitive data should not be stored in the URL
+Application should be able to run on everyones machine
+All features need to be signed off by tech lead (mentor)
+Frontend should be Node.js Typescript"
+Dp_RTXQTOUyUFOXu2GHZ0ZYAAIuV;AI000 PROBLEM STATEMENT;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;"AI Engineering Ticket;General";"Produce a tool that will produce some analysis of some job description text.  This could be:
+Formality score (how formal/professional vs informal/colloquial is text) + highlight formal/informal sentences/words
+This may also include:
+Sentiment analysis
+Language detection
+Gender bias detection
+The tool will be integrated into main Kainos jobs website.
+General tasks:
+Find a dataset
+Create a suitable model
+Deploy the model to an API Endpoint
+Integrate the model into the website"
+5sMxJTEHvkClcbNIH_VnFpYAIXQj;AI001 - Find Suitable Dataset;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;AI Engineering Ticket;"As a AI Engineer I want a data set to train an NLP model and output the formality of text
+AC:
+Find a suitable dataset
+Split the data into training, test and validation
+Ideas:
+Datasets:
+GYAFC
+NUS Social Media Text Normalisation Corpus
+Papers:
+https://arxiv.org/pdf/2204.08975.pdf
+https://github.com/YonglinWang-Brandeis/text-formality-classifier/blob/master/doc/project_report.pdf
+https://cs.brown.edu/people/epavlick/papers/formality.pdf"
+-HzMbndgoUGwtwfIj1m905YACjur;AI002 - EDA (Exploratory Data Analysis);oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;AI Engineering Ticket;"As AI Engineer I want to have a better understanding of the data so I know how it can be used to create a model
+AC:
+Import the train data into a Jupyter notebook locally
+Get insights from the text itself
+Look into distributions of the columns. Looks for class imbalance
+Make use of graphs to shows key insights from the data"
+erBhq9bnuk-xismDyK4VE5YAIzX4;AI003 - Preprocess the Text and Create Text Embeddings;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;AI Engineering Ticket;"As an AI Engineer I need the data prepared so it’s ready to be fed into a model
+AC:
+Remove null values
+Vectorize
+Create a function to stem text with chosen stemmer
+Use some stopwords (carefully curate)"
+WR2-sUoEhEmn95Pz7WPYp5YAIPvp;AI004 - Explore Appropriate Models and Train;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;AI Engineering Ticket;"As an AI Engineer I want to use multiple models to give a more accurate baseline performance before further experimenting
+AC:
+Use the SKLearn diagram to find a suitable model
+Also include a gradient boosted model
+Use test split to output the accuracy for each model"
+VYyJlr7i3kKdHDip1JlqeZYABW0b;AI005 - Create Evaluation Visualizations;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;AI Engineering Ticket;"As an Product Owner I want a clear view of the different accuracy metrics of the models so I can track progress and decide which model is best
+AC:
+Create a confusion matrix visualisation for each model
+Calculate and show graphically the F1, Recall, precision and accuracy of each model"
+MR64vpoFq0yW921Tfouzr5YAKGic;AI006 - Output Sentiment Analysis From Pretrained Model;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;AI Engineering Ticket;"As a PO I want to know other sentiments that relate to the job description text that we can quantify e.g. subjectivity, positivity
+AC:
+Find a pre-trained sentiment analysis model
+Choose some examples to demo to the PO
+Hint: https://towardsdatascience.com/the-most-favorable-pre-trained-sentiment-classifiers-in-python-9107c06442c6"
+3vtt-WCn-0yHyZe458HvXZYAC4uP;AI007 - Pickle and Deploy to an Endpoint in AWS;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;AI Engineering Ticket;"As an AI Engineer, I want to select the most promising model that fits the client needed and then pickle the trained model. Then uploading it to a AWS Endpoint
+AC:
+Model is fully trained on available data and stored as a pickle
+Uploaded and accessible on the AWS Endpoint.
+Python code is fully documented following appropriate PEP
+Tech notes:
+If stuck have a look at day 2 of the AI academy content on how to do this"
+-mwySm8EAEeGcaM8lHoe4pYABSmv;AI008 - Build Backend to use the Model API Endpoint;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;AI Engineering Ticket;"As an AI Engineer, I want a backend system that uses the model API endpoint created and can be set up to use by the front-end UI
+AC:
+Backend System that is linked to the model API endpoint
+Backend System is integrated with the rest of the application
+Error handling if an unexpected status code occurs
+Fully unit-tested and load-tested"
+SAlpSGp0y0y6MJYsrBFd8JYAAwvq;AI009 - Build UI;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;AI Engineering Ticket;"As an AI Engineer I want a user interface that takes in a job description text and returns formality score + other features e.g. informal detected sentence/words
+AC:
+Webpage that is linked to rest of the application
+Intakes job description and returns gender bias prediction
+User error handling
+UI Matches the theme of the rest of the application
+Fully tested"
+osGESztTaUKADbDhcZCnQJYAKho-;AI010 - Experiment tracking;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;AI Engineering Ticket;"As an AI Engineer, I want to be able to easily track my experiments in a centralised place in the cloud so other can contribute, keep track metrics and store models.
+AC:
+Deploy MLFlow to AWS
+Ensure the experiments from the last ticket are being tracked on this server"
+7HPxvKwPSUCpE5b_vJRVq5YAB2Ij;DA000 - DA PROBLEM STATEMENT;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;"General;Data Analyst";To use the employees dataset provided, alongside the data produced in the Database for the engineering project database. To produce a PowerBI dashboard that will allow a user to slice and filter the data of a table of employees to highlight the number of different roles and salaries within the company.
+Dd5AwhV0AkiqvNO9KHLh5pYAACFF;DA001 - Populate Database;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/2;"Meets Acceptance Criteria;Peer Reviewed";Data Analyst;"As as Data Analyst I would like a populated database with tables and data for
+Job Roles & specifications
+Capabilities
+Bands
+Competencies
+Training
+Acceptance Criteria
+Database on AWS populated with the above list of tables and data"
+dlOrqWRZEUKAZoorg4GZ7ZYANhtu;DA002 - Data imported to PowerBI;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/2;"Meets Acceptance Criteria;Peer Reviewed";Data Analyst;"As a Data Analyst I would like the data imported into PowerBI for
+Employee (Provided in Ticket) (Attach dataset to ticket)
+Band
+Job Roles
+Capabilities
+Acceptance Criteria
+The above list of tables imported into PowerBI
+Ensure tables are in 3NF
+hint - ( https://dev.mysql.com/downloads/connector/odbc/ )"
+7H0615K2vkOkaYd9yH8IvZYAKBOQ;DA003 - Clean Data;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/2;"Meets Acceptance Criteria;Peer Reviewed";Data Analyst;"As a user I would like to have a clean dataset
+No duplicate rows
+No unused columns
+No null or blank columns"
+t6rZWxJr9k-fciEi2DPRYJYALQD9;DA004 - Relationships in Data Model;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/2;"Meets Acceptance Criteria;Peer Reviewed";Data Analyst;"As a Data Analyst I would like to see appropriate relationships between the tables imported into PowerBI
+Acceptance Criteria
+Relationships formed between each table to enable filtering
+Ensure dataset is in 3NF"
+Srf6XUFGs0yEAhregaiM45YAOaEF;DA005 - Date Table;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/2;"Peer Reviewed;Meets Acceptance Criteria";Data Analyst;"As an end user I would like to filter on the Hire Date with a Date table
+Acceptance Criteria
+A date table linked to the Hire Date"
+L7vBPEV5bUa-SsJpRWtezpYAAasO;DA006 - KPIs/Cards;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/3;"Meets Acceptance Criteria;Peer Reviewed;UX Approved";Data Analyst;"As an end user I would like to see KPIs or Cards for
+Total Employees
+Latest Hire Date
+Highest & Lowest Salary (including difference)
+Acceptance Criteria
+KPIs or Cards on the sheet covering all 3 KPIs requested"
+zDn7Ehxg6EiPNrrNQJZ1oJYAPTgz;DA007 - Employees by Band chart;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/3;"Peer Reviewed;Meets Acceptance Criteria;UX Approved";Data Analyst;"As an end user I want to see the count of employees by band (screenshot attached)
+Acceptance Criteria
+Bar chart in screenshot attached recreated on a sheet"
+HIYwzE8DS06W5Qi_GOpTd5YADff8;DA008 - Employees Hired by Month;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/3;"UX Approved;Meets Acceptance Criteria;Peer Reviewed";Data Analyst;"As an end user I want to see a line chart with employees hired by month (Screenshot attached)
+Acceptance Criteria
+Line graph in screenshot attached recreated on a sheet"
+ZckNqZL2U0a2s-K6hTsvA5YAGXnt;DA009 - Employees by Country;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/3;"UX Approved;Peer Reviewed;Meets Acceptance Criteria";Data Analyst;"As an end user I want to see the count of employees by country (screenshot attached)
+Acceptance Criteria
+Map in screenshot attached recreated on a sheet"
+v3s9vTpbVEOrw7bKlIsZF5YALlh6;DA010 - Staff near retirement age;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/3;"Peer Reviewed;Meets Acceptance Criteria;UX Approved";Data Analyst;"As an end user I want to see the number of staff who are near retirement age (65-70)
+Acceptance Criteria
+A bar chart highlighting the number of staff near retirement age"
+HsR8oZvzpUSRPIPRGEg93ZYAN1WY;DA011 - Salary breakdown;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/3;"Meets Acceptance Criteria;UX Approved;Peer Reviewed";Data Analyst;"As an end user I want to see a breakdown of salaries
+Acceptance Criteria
+A chart, table or graph breaking down salaries"
+kKRKC15fqkyMf4SC-8WuQZYAJjyX;DA012 - Date Filters;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/3;"Meets Acceptance Criteria;Peer Reviewed;UX Approxed";Data Analyst;"As an end user I want to be able to slice and filter the report by hire date
+Acceptance Criteria
+A filter on the page of the report to enable date slicing"
+yuRWMdGxwUCA1snnsD1625YABFuY;DA013 - Slicing and Filtering;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/3;"Peer Reviewed;UX Approved;Meets Acceptance Criteria";Data Analyst;"As an end user I want to be able to filter all pages by capability and band level.
+Acceptance Criteria
+The ability to filter by capability from the reports pages
+The ability to filter by band from the reports pages"
+Iflmpgw0k06B184XqQDTEpYAELSF;DA014 - Employee Demographics Sheet;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/3;"UX approved;Peer Reviewed;Meets Acceptance Criteria";Data Analyst;"As an end user I want a sheet with the breakdown of the employee demographics
+Acceptance Criteria
+A sheet within the PowerBI report with a range of tables, charts and graphs covering the employee demographics"
+QpYikjrdXke4cvXd9ITeW5YALrgg;DA015 - Locations Sheet;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/3;"Peer Reviewed;UX Approved;Meets Acceptance Criteria";Data Analyst;"As an end user I want a sheet with the breakdown of the employee locations
+Acceptance Criteria
+A sheet within the PowerBI report with a range of tables, charts and graphs covering the employee locations"
+nf5T-aW6qkm96509JNcnQJYAI_yz;DA016 - Capability / Job Role Sheet;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/3;"Meets Acceptance Criteria;UX Approved;Peer Reviewed";Data Analyst;"As an end user I want a sheet with the breakdown of the capabilities and job roles.
+Acceptance Criteria
+A sheet within the PowerBI report with a range of tables, charts and graphs covering the capabilities and job roles."
+v1qBR-W7vUC8YtOMtYvi0ZYAMggN;DA017 - Overview Sheet;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/3;"Peer Reviewed;Meets Acceptance Criteria;UX Approved";Data Analyst;"As an end user I want to see an overview sheet with an overall overview of the data with KPIs/Cards and high-level graphs.
+Acceptance Criteria
+A sheet within the PowerBI report with a range of tables, charts and graphs with a high level overview of the data."
+Y6_DOqpJpE6Hf9KijQKSLpYALEXV;DA018 - Navigation;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/3;"Peer Reviewed;Meets Acceptance Criteria;UX Approved";Data Analyst;"As an end user I want to navigate the report with buttons (tabs) within the report.
+Acceptance Criteria
+Buttons on each page to allow for easy and functional navigation of the report"
+qVf0Ivlpi0KAr8_6FX8ncZYAHvuJ;DA019 - Branding;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/3;"Meets Acceptance Criteria;Peer Reviewed;UX Approved";Data Analyst;"As an end user I would like my report branded in the Kainos branding
+Acceptance Criteria
+Kainos colour scheme used throughout
+Kainos Logo on every sheet
+Kainos (or nearest available) font used throughout
+hint - look on SharePoint for info"
+ACDQ10xQC0mHPwGOJGvktpYAOOCw;DA020 - Presentation;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/2;"Peer Reviewed;Meets Acceptance Criteria";Data Analyst;"As an end user I want to see a presentation prepared of the dashboard with consideration of the data within
+As a Data Analyst I want to see another presentation prepared with considerations to the technical details
+Acceptance Criteria
+official Kainos assets used
+peer reviewed"
+D7QdSQWnnkiD25AElhnXI5YAKUN9;DA021 - Employee Data in Database;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/2;"Peer Reviewed;Meets Acceptance Criteria";Data Analyst;"As a Data Analyst I want the Employees table in the database instead of within an excel spreadsheet
+Acceptance Criteria
+Employees table spreadsheet uploaded to database
+Employees table from database in PowerBI report to replace spreadsheet"
+ygqf5dqVPUaMq6OVrbrF8pYAAIcD;DA022 - Dashboard Sharing;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/2;"Meets Acceptance Criteria;Peer Reviewed";Data Analyst;"As an end user I want the dashboard published to a workspace on PowerBI Service and shared with end users (John Walker & Scott Boyd)
+Acceptance Criteria
+Report published to PowerBI workspace (Name of workspace to be added)
+Report to be shared with users (John Walker & Scott Boyd)"
+ovTaS5qH8UO9CyjqFtlIoZYAG3Zs;DA023 - Dashboard Security;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/2;"Meets Acceptance Criteria;Peer Reviewed";Data Analyst;"As a Principal employee end user I only want to see the data of employees for the location that I am currently in
+Acceptance Criteria
+Row level security implemented
+Restriction applied to enable Principal level employees to only see the data for the location they are currently based
+Tested with principal employee users within PowerBI desktop to ensure working"
+w00CPs4_cUWxC4EPig4nTpYAFTCw;DA024 - Data Model & Sources;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/2;"Peer Reviewed;Meets Acceptance Criteria";Data Analyst;"As a Data Analyst I want to see documentation completed containing a detailed Data Model Diagram and the source location and format of the data used within the report to enable me to recreate.
+As a Data Analyst I want to see a data dictionary detailing the field name data type, any expected values and location of joining fields.
+Acceptance Criteria
+Data Model Diagram
+Table containing source location and format
+Data dictionary
+Follow Kainos branding and templating"
+2UznekzeIU61Z8svrBST1JYAPKSf;S001: Software Composition Analysis;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;Security;"As a security operator I need to know which 3rd party libraries have known vulnerabilities so I can make a risk based decision on when these need to be updated and can track the health of the project long term.
+Verified critical vulnerabilities need to be fixed immediately
+High vulnerabilities need to be fixed in the next sprint
+Medium/Low vulnerabilities need to be fixed within 30 days
+Acceptance Criteria
+Known vulnerabilities in 3rd party libraries must be identified frequently (at least once per day)
+Both the Security operations team and Engineering team must be notified immediately (e.g. Teams/Slack/Email) of critical & high vulnerabilities in 3rd party libs (low/medium vulnerabilities are not immediately notified) - leave this til the end
+A report can be automatically generated at any time showing the current known vulnerabilities and their age - tool generates an output which is configurable
+(GitHub Dependancy Check, Blackdock?, Maven Plugin)"
+wjnZj64zpk-NKc_PrDzwEZYAIHVi;S002: Static Application Security Testing (SAST);oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;Security;"As a security engineer I need to automate Application Security Testing tools so I can more efficiently review custom code for vulnerabilities.
+Acceptance criteria:
+Implement SAST (e.g. SonarQube, Find-Security-Bugs)
+Validate findings and eliminate false positives
+Work with developer to fix issues
+Order of working:
+Set up SonarQube to run locally within a Docker container, with an attached volume so that restarting the container does not lose any configuration or results https://hub.docker.com/_/sonarqube
+Configure SonarScanner to run as a regular task using the dockerised version of SonarScanner https://docs.sonarqube.org/latest/analysis/scan/sonarscanner/, to scan each project component (i.e. Web front end, API etc) and to report results to the SonarQube server running locally (most likely localhost:9000)
+Automate the process of starting the SonarQube container, pulling down the most recent versions of your code repositories, starting the SonarScanner docker jobs, and viewing the results in the SonarQube dashboard
+Share any new findings each day with the development team so that bugs and vulnerabilities are fixed when appropriate"
+P26OvdkOGE6hf3TckLSQuJYAMet4;S003: Interactive Application Security Testing (IAST);oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;Security;"As a security engineer I need to automate Application Security Testing tools so I can more efficiently review custom code for vulnerabilities.
+Acceptance criteria:
+Implement IAST (e.g. Contrast Assess Community)
+Validate findings and eliminate false positives
+Work with developer to fix issues"
+DaV5SdUR3EGdb0PdCvLLyZYAGTNG;S004: Web Application Secure Config/Headers;oxDLoSncJkqsruLs9qjEnZYAKbPq;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;Security;"As a security engineer I want to ensure that web application has implemented secure headers and followed secure cookie configuration
+so that the service is resilient against certain attacks
+Acceptance criteria:
+Create tickets for developers to implement recommended headers (content security policy, protections against XSS attacks and headers for ensuring HTTPS is used)
+Refine the stories for developers
+Work with developers to test the implemented solution
+Validate the headers are set correctly (e.g. https://securityheaders.com/)"
+Vw6W5aAr4kCdfnjQHtd-QpYAAuBk;US008 - View all bands;MCPhoyHQiEyhs32l2acP-5YABvHo;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/5;"Tested;Meets Acceptance Criteria;UX approved;Peer Review;Product Owner Approved";Applicant;"As an applicant
+I want to view band information
+So that I know the band information
+Acceptance criteria
+List page with band information (name, level)
+Link to band list page from home page"
+md0Dz7xajkKTRjHYGcJsDJYAM8nk;US013 - Add a new capability;MCPhoyHQiEyhs32l2acP-5YABvHo;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/5;"UX Approved;Meets Acceptance Criteria;Product Owner Approved;Peer Review;Tested";Admin;"As an Admin
+I want to be able to create a new capability
+So that I can assign roles to correct capabilities to date
+Acceptance criteria
+Able to define:
+New capability name
+Capability lead
+Image of capability lead should be stored in AWS S3 (ask mentor to set up S3 bucket) 
+Can create a new capability from capability list page"
+atXFfxP1lUWzArEikBGBS5YAOylz;US014 - Create a new band;MCPhoyHQiEyhs32l2acP-5YABvHo;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/5;"Meets Acceptance Criteria;Peer Review;Tested;Product Owner Approved;UX approved";Admin;"As an Admin
+I want to add a role to a new band
+So that I can assign roles to new bands
+Acceptance criteria
+Able to define:
+Band name
+Level of band (dropdown list)
+Training available for band (checkboxes)
+Competencies information for band
+Can create band from the band list screen"
+cwge1xB-QUCLj7chMWPd1ZYAG0dy;US016 - Edit Capability;MCPhoyHQiEyhs32l2acP-5YABvHo;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/5;"Product Owner Approved;UX approved;Peer Review;Meets Acceptance Criteria;Tested";Admin;"As an Admin
+I want to edit a capability
+So that I can keep the system up to date
+Acceptance Criteria
+Able to update:
+Capability name
+Capability lead
+Capability lead image
+Can edit from capability list page and capability details page"
+1Dttjs83J0mrihB-bqJz9ZYANhmL;US017 - Edit a band;MCPhoyHQiEyhs32l2acP-5YABvHo;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/5;"UX approved;Tested;Meets Acceptance Criteria;Peer Review;Product Owner Approved";Admin;"As an Admin
+I want to edit a band
+So that I can keep the Career Lattice information up to date
+Acceptance Criteria
+Able to update:
+Band name
+Level of band (dropdown list)
+Training available for band (checkboxes)
+Competencies information for band
+Can update from band list screen and band details page
+Form should be pre-populated"
+ISx7PE9Q4Uey9kwJVj6_mJYAKZg3;US021 - Delete a band;MCPhoyHQiEyhs32l2acP-5YABvHo;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/5;"UX Approved;Tested;Meets Acceptance Criteria;Product Owner Approved;Peer Review";Admin;"As an Admin
+I want to delete a band
+So that I can keep the software information up to date
+Acceptance Criteria
+able to delete band from band list page and details page
+warning to appear with confirmation"
+HnJzmzOTl0mvifmQebfpMpYAGk7P;US022 - Delete capability;MCPhoyHQiEyhs32l2acP-5YABvHo;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/5;"UX approved;Tested;Meets Acceptance Criteria;Product Owner Approved;Peer Review";Admin;"As an Admin
+I want to delete a capability
+So that I can keep the system up to date
+Acceptance Criteria
+Can delete capability from capability list page
+Warning to appear asking to confirm"
+nNooaXRiKESY8eLUHpE9fpYALhbt;US028 - Role Filtering;L0EO1c-x2kCR2Q-yVlZOB5YAOOQK;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;Applicant;"As an applicant I want to be able to filter the roles page by each of the columns displayed in the roles table
+Acceptance Criteria:
+text box for any columns that use free text fields
+check boxes for any columns that have a limited amount of values
+filtering should be done on API to allow API users to also filter"
+D3HeNM3jy0mMGBNy6kohrZYALsg8;US029 - Role Ordering;L0EO1c-x2kCR2Q-yVlZOB5YAOOQK;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;Applicant;"As an applicant I want to be able to order the roles page by any columns displayed in the roles table
+Acceptance Criteria:
+column headings should be clickable
+first click should sort by column ascending alphabetically
+second click should sort by column descending alphabetically
+third click should revert to no ordering
+ordering should be done on API side to allow API users to also order"
+JRYx7s3gzEOpUqqHnGuso5YABQJc;US034 - Application should be able to run with Javascript disabled;MCPhoyHQiEyhs32l2acP-5YABvHo;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/5;"Product Owner Approved;Meets Acceptance Criteria;UX approved;Tested;Peer Review";NFR;"As a user
+I want the application to be functional on browsers with Javascript disabled
+So the application will be usable for all users
+Acceptance Criteria:
+With javascript disabled on all browsers I will be able to use the application in the same way as if javascript was enabled"
+qsM3Ct_caEi2QWuLSEc_l5YAMgjG;US024 - Registration System;r8cK4ko2SUyrR4e65pe5iJYAKZLo;;W toku;Średni;"259f2674-2abf-469b-a8b4-6cc20d34a526;9c5eb4ff-af7a-4860-8578-9ef3ef6702d3;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4";c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;2026-08-12;;false;;;0/2;"frontend;backend connection";Security;"Acceptance Criteria
+User must be able to register with email, password
+Role should default to ""user"" role in database (not admin)
+Email must be a valid email format
+Password much be more than 8 chars with upper, lower and special char
+Password should be salted and hashed (https://youtu.be/zt8Cocdy15c?si=u74kFMHTvILDY1P_)"
+nm4SJ3ow9E-t4XIci89EiJYAMDit;US001 - View Job Roles (3);3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;2026-08-11;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;3/3;"US001-02 - API;US001-03 - Database;US001-01 - UI";Applicant;"As a applicant
+I want to view job roles within Kainos
+So that I can see all the job roles available in Kainos
+Acceptance Criteria
+Can view a list of job roles within Kainos with the status ""open""
+role name
+location
+capability
+band
+closing date
+Tech notes:
+UI
+New JobRoleController with GET /job-roles route to render list of job roles
+New JobRoleService with axios call to GET /job-roles API endpoint
+New job-role-list.html view
+API
+New JobRoleController with GET /job-roles route to return list of job roles
+New JobRoleService which returns list of JobRoleResponse
+New JobRoleDao which queries job-role database table and returns list of JobRole
+New JobRoleResponse model
+New JobRole model
+New JobRoleMapper which maps JobRole to JobRoleResponse
+Database
+New job-roles table with jobRoleId, roleName, location, capabilityId, bandId, closingDate and status
+New capability table with capabilityId, capabilityName
+New band table with nameId, bandName
+Test scenarios:
+Can view job roles
+Branch name: 001-view-job-roles"
+dqx7vq7vKUexNqSuvLzlsJYAGMYN;US032 - README for running and testing;3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Średni;"259f2674-2abf-469b-a8b4-6cc20d34a526;9c5eb4ff-af7a-4860-8578-9ef3ef6702d3;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4";c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;2026-08-07;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;;;Documentation;Update the README to include info on how to run, build, test, migrate & lint the API & UI applications
+yge3RBQ5zkygj4olB15pcZYAHTxK;US038 - Linting check;3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Wysoki;"259f2674-2abf-469b-a8b4-6cc20d34a526;9c5eb4ff-af7a-4860-8578-9ef3ef6702d3;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4";c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;2026-08-05;;false;2026-08-07;259f2674-2abf-469b-a8b4-6cc20d34a526;;;NFR;"Add in linting checks to ensure our code is consistent across the UI & API applications
+Linter should use biome
+ACs
+npm run lint - should run the linter and flag any issues
+npm run lint:fix - should run the linter and auto fix any issues it can
+See the biome docs for the flags to use to get auto fix working"
+F5r6ncboWEagqGJk7OYmppYANQtb;US036 - Deploy API to AWS;C2XFJfnWqkGl4UUtY3ZeTJYAFFQa;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;NFR;"Acceptance Criteria:
+Dockerise API
+Github Action to store docker container in AWS
+Ask mentor for AWS secrets
+Example: https://github.com/shaunganley/java-dropwizard-swagger-jdbc"
+08Kbk1XCL02y-BU7sYko4JYAHYTa;US037 - Deploy frontend to AWS;C2XFJfnWqkGl4UUtY3ZeTJYAFFQa;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;NFR;"Acceptance Criteria:
+Dockerise Frontend
+Github Action to store docker container in AWS
+Ask mentor for AWS secrets
+Example: https://github.com/shaunganley/nodejs-express-govuk-axios"
+9pHGq6xZJEuHg6Qx0eOlj5YAPEVb;US026 - Add branding to the product;3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Średni;9c5eb4ff-af7a-4860-8578-9ef3ef6702d3;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;2026-08-07;;false;2026-08-10;9c5eb4ff-af7a-4860-8578-9ef3ef6702d3;;;NFR;"Add the required Kainos header and branding onto the project
+Acceptance criteria:
+Kainos logo
+Kainos colours, styling and fonts
+Home page/index
+Favicon
+Footer with contact information"
+kz2NzqNXykGN1YbkpXtDlJYAEnH5;US040 - Login System;r8cK4ko2SUyrR4e65pe5iJYAKZLo;;W toku;Średni;9c5eb4ff-af7a-4860-8578-9ef3ef6702d3;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;2026-08-12;;false;;;0/2;"backend connetcion;frontend";Security;"Acceptance Criteria
+User must log in with email and password
+User must be able to log out
+If email and password match database record, generate a JWT token
+JWT token should be stored in browser session
+Password should be salted and hashed before comparing to database: https://youtu.be/zt8Cocdy15c?si=u74kFMHTvILDY1P_"
+ojWARw7CWEWbmQ3dQ_AtPpYAERzF;US042 - UI test US001;C2XFJfnWqkGl4UUtY3ZeTJYAFFQa;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;Testing;"Add a UI test for viewing list of job roles
+UI test should run against localhost and AWS URLs"
+YlXOKzOeVkiFM8R2PZukvJYAFFis;US039 - Performance test US001;C2XFJfnWqkGl4UUtY3ZeTJYAFFQa;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;Testing;"Add a performance testing for viewing list of job roles
+performance test should run against localhost and AWS URLs
+The number of users for the performance tests should be limited to 10 (otherwise the database will break)"
+BSlWZr4bEUqrXBAJiNtH1pYAHgPo;US033 - Accessibility test US001;C2XFJfnWqkGl4UUtY3ZeTJYAFFQa;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;Testing;"Add accessibility tests to all existing pages to ensure that users with accessibility needs can use the service without issues
+ACs:
+https://pa11y.org/
+accessibility tests should run nightly against AWS URLs
+accessibility tests should be able to be run against localhost
+devs should be able to add URLs for future pages"
+K2t229j8REmjrAQ4jvH4MZYAJvun;US002 - View job role information;3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;2026-08-12;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;;;Applicant;"As an applicant
+I want to find job specification information about each role
+So that I know what is expected for each role
+Acceptance Criteria
+Able to click on the job role name in the job roles list page
+Can view:
+job role name
+description
+responsibilities
+link to Job Spec for each role in SharePoint
+Location
+capability
+band
+closing date
+status
+number of open positions
+Tech notes:
+Update job-role table to contain specification column
+Update UI to show specification (new page with link from job roles list page)
+New GET /job-roles/{id} API endpoint
+Tech notes:
+UI
+New method in JobRoleController with GET /job-roles/{id} route to render job role information
+New method in JobRoleService with axios call to GET /job-roles/{id} API endpoint
+New job-role-information.html view
+API
+New method in JobRoleController with GET /job-roles/{id} route to return job role
+New method in JobRoleService which returns JobRoleDetailedResponse
+New method in JobRoleDao which queries job-role database table and returns JobRole
+New JobRoleDetailedResponse model
+Update JobRole model to include new fields
+New method in JobRoleMapper to map JobRole to JobRoleDetailedResponse
+Database
+Alter job-roles table to include description, responsibilities, sharepointUrl, statusId, numberOfOpenPositions
+New status table with statusId, statusName
+Branch name: 002-view-role-detail"
+q-hlGOGMmkiaWV1tjP0xy5YAKgDo;US012 - Add new role;3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;2026-08-12;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;0/2;"Frontend;API";Admin;"As an Admin
+I want to add a new role to an existing capability and band
+So that I can keep the software information up to date
+Acceptance criteria
+Able to add a new role to an existing band and capability
+Able to add details to new role:
+Job role name
+Job spec summary
+Sharepoint link
+Responsibilities
+Number of open positions
+Location
+closing date
+Able to select band from dropdown of bands in database
+Able to select capability from dropdown on capabilities in database
+Input data must be validated on UI & API
+Able to create a role from the job roles list page
+Status should be set to ""open"" in database"
+ozDWzBvYZUuDiQDoFGQKrJYAIfe9;US015 - Edit a role;3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;2026-08-12;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;0/5;"Meets Acceptance Criteria;UX Approved;Peer Review;Tested;Product Owner Approved";Admin;"As an Admin
+I want to edit a role
+So that I can keep the software information up to date
+Acceptance criteria
+Able to update:
+Job role name
+Job description
+Sharepoint link
+Responsibilities
+Band (dropdown list)
+Capability (dropdown list)
+Status (dropdown list)
+Number of open positions
+Location
+closing date
+UI must pre-populate fields in form
+Input data must be validated in UI & API
+Able to edit the role from the job roles list page and the job specification page"
+OT07VLmKg0uCEe9xeVCgGJYAHyoC;US020 - Delete a role backend;3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Średni;9c5eb4ff-af7a-4860-8578-9ef3ef6702d3;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;2026-08-12;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;;;Admin;"As an Admin
+I want to delete a role
+So that I can keep the software information up to date
+Acceptance criteria
+Able to delete the role from the job roles list page and the job specification page
+Warning must appear asking for confirmation before deletion"
+IQqZtS2HtkKUZG6-twlX95YAHm0v;Create Frontend Project;3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Wysoki;"259f2674-2abf-469b-a8b4-6cc20d34a526;9c5eb4ff-af7a-4860-8578-9ef3ef6702d3;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4";c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;2026-08-06;2026-08-06;;false;2026-08-07;259f2674-2abf-469b-a8b4-6cc20d34a526;;;NFR;"Create a basic node project for the frontend.
+ACs:
+npm run build - builds the project and stores it in ./dist
+npm run dev - runs the project in hot reload mode
+npm run start - starts the project from the ./dist folder
+The following packages should be installed:
+express
+nunjucks
+The app should scaffold a basic express app that exposes a single /health endpoint
+This will return a json object of the following format
+{
+""status"": ""UP"",
+""time"": current timestamp
+}
+The app should show a basic html page with hello world on it when the user hits /
+e.g http://localhost:3000/ gives back hello world in html
+No styling necessary"
+gl4BMyfLNkaIfRHBAy98n5YAHr8C;Create Backend Project;3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Wysoki;"259f2674-2abf-469b-a8b4-6cc20d34a526;9c5eb4ff-af7a-4860-8578-9ef3ef6702d3;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4";c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;2026-08-05;2026-08-04;;false;2026-08-05;9c5eb4ff-af7a-4860-8578-9ef3ef6702d3;;;NFR;"Create a basic node project for the api backend.
+ACs:
+npm run build - builds the project and stored it in ./dist
+npm run dev - runs the project in hot reload mode
+npm run start - starts the project from the dist folder
+The following packages should be installed:
+express
+The app should scaffold a basic express app that exposes a single /health endpoint
+This will return a json object of the following format
+{
+""status"": ""UP"",
+""time"": current timestamp
+}"
+J-Fxf9AjFEKImaUVnOOw55YAFect;US040 - View band information;MCPhoyHQiEyhs32l2acP-5YABvHo;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/5;"Tested;Meets Acceptance Criteria;UX approved;Peer Review;Product Owner Approved";Applicant;"As an applicant
+I want to view band information
+So that I know the band information
+Acceptance criteria
+Can click on band name in band list page to view more information
+Can click on band name in role list page to view more information
+Able to see name, level, training, competencies"
+PILPgOQju0azKLnE7NNqBZYAFaX2;US042 - View all capabilities;MCPhoyHQiEyhs32l2acP-5YABvHo;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/5;"Tested;Meets Acceptance Criteria;UX approved;Peer Review;Product Owner Approved";Applicant;"As an applicant
+I want to view capabilities information
+So that I know the capabilities information
+Acceptance criteria
+List page with capabilities information (name, capability lead name)
+Link to capabilities list page from home page"
+OabrfsFkZk-1cwyv73f2YZYAM_0Z;US043 - View capability information;MCPhoyHQiEyhs32l2acP-5YABvHo;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/5;"Tested;Meets Acceptance Criteria;UX approved;Peer Review;Product Owner Approved";Applicant;"As an applicant
+I want to view capability information
+So that I know the capability information
+Acceptance criteria
+Can click on capability name in capability list page to view more information
+Can click on capability name in role list page to view more information
+Able to see name, capability lead name and capability lead image (image should be stored in AWS S3 bucket, ask mentor to create bucket)"
+CQXRXAC56EW_4W9lfQpkmpYACClS;US044 - View all training;MCPhoyHQiEyhs32l2acP-5YABvHo;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/5;"Tested;Meets Acceptance Criteria;UX approved;Peer Review;Product Owner Approved";Applicant;"As an applicant
+I want to view training information
+So that I know the training information
+Acceptance criteria
+List page with training information (name, bands)
+Link to training list page from home page"
+0vp3JT_sj0uad5v3ncfATpYALqiF;US045 - View training information;MCPhoyHQiEyhs32l2acP-5YABvHo;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/5;"Tested;Meets Acceptance Criteria;UX approved;Peer Review;Product Owner Approved";Applicant;"As an applicant
+I want to view training information
+So that I know the training information
+Acceptance criteria
+Can click on training name in training list page to view more information
+Can click on training name in band information page to view more information
+Able to see name, bands and competencies"
+B1wZStGzhEaZmSEXcJykpJYAA_mz;US046 - Edit training;MCPhoyHQiEyhs32l2acP-5YABvHo;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/5;"Product Owner Approved;UX approved;Peer Review;Meets Acceptance Criteria;Tested";Admin;"As an Admin
+I want to edit a training
+So that I can training information up to date
+Acceptance Criteria
+Able to update:
+Training name
+bands (checkboxes)
+competencies (checkboxes)
+Can edit from training list page and training details page"
+VJ3oEm3sE0KSnV3RxUB815YANzx-;US047 - Delete training;MCPhoyHQiEyhs32l2acP-5YABvHo;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/5;"UX approved;Tested;Meets Acceptance Criteria;Product Owner Approved;Peer Review";Admin;"As an Admin
+I want to delete a training
+So that I can keep the training information up to date
+Acceptance Criteria
+Can delete training from training list page
+Warning to appear asking to confirm"
+Ge56iRvUSkuRc5_Nn3AjmJYAMBs-;US048 - Add a new training;MCPhoyHQiEyhs32l2acP-5YABvHo;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/5;"UX Approved;Meets Acceptance Criteria;Product Owner Approved;Peer Review;Tested";Admin;"As an Admin
+I want to be able to create a new training
+So that I can assign roles to correct training to date
+Acceptance criteria
+Able to define:
+New training name
+Bands (checkboxes of bands from database)
+Competencies (checkboxes of bands from database)
+Can create a new training from training list page"
+Z5lqapsstEWq0FmSCZPRQpYAHh47;US050 - Apply for role;kQF6DVAXsU-MkZxy-pCsQ5YAM3lZ;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;Apply for role;"As an applicant
+I want to be able to apply for a job role
+So I can register my interest in Kainos
+Acceptance criteria:
+If the number of open positions is more than 0 and the status of the role is ""open"" a button should appear on the job information page for applicant users to apply
+A new page should allow the applicant to upload CV
+When submitted, application status should be set to ""in progress""
+Non-functional requirements:
+CV should be stored in AWS S3 bucket (ask mentor to create bucket)"
+jWEhe3G0n0ujAaJtqA4gspYADGCp;US051 - Assess role applications;kQF6DVAXsU-MkZxy-pCsQ5YAM3lZ;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;Apply for role;"As a Recruitment Admin
+I want to see a list of applications for each role
+So that I assess who should be hired
+Acceptance Criteria
+Only for admins:
+A list of applicants should appear on the job role information page with the status of the application
+The username should be clickable and open the applicants CV (stored in AWS S3 bucket)
+If application status is ""in progress"": A ""hire"" link should appear next to each applicant. Upon clicking the hire link a confirmation box should appear. Upon confirming the number of open positions should be reduced by 1 and update status to ""Hired""
+If application status is ""in progress"": A ""reject"" link should appear next to each applicant. Upon clicking the reject link a confirmation box should appear. Upon confirming update status to ""Rejected"""
+-HCbxyrrgku854Mw3MX7v5YADaX6;US053 - View my job applications;L0EO1c-x2kCR2Q-yVlZOB5YAOOQK;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;Apply for role;"As an applicant
+I want to view all of my job applications
+So that I know the status of my applications
+Acceptance criteria
+List page with job application information for logged in user:
+role name (link to the role information page)
+status (in progress, hired, rejected)
+Link to job applications list page from home page"
+3FlbPA2A70Gc3Mi-hLngdJYACQpm;US053 - Chatbot;MCPhoyHQiEyhs32l2acP-5YABvHo;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/5;"Tested;Meets Acceptance Criteria;UX approved;Peer Review;Product Owner Approved";Applicant;"As an applicant
+I want to have access to a chatbot
+So that I can ask questions about roles
+Acceptance criteria
+Can see a chat icon that can be expanded
+Can ask a question to the chatbot about job roles
+Chatbot responds with accurate information"
+Fq4-ZxB-1EilPWDCEtsJPpYAMEqW;US054 - Generate report;L0EO1c-x2kCR2Q-yVlZOB5YAOOQK;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;Admin;"As an Admin
+I want to generate a report of all job roles
+So that I can provide an up to date export to stakeholders
+Acceptance Criteria
+Able to update:
+A CSV file will be downloaded in the browser that will contain all job role information
+Can generate report from job roles last page"
+V6z9BI9VIk2wyXNrWUBJVpYAPaVz;US055 - Automatic job role status updates;L0EO1c-x2kCR2Q-yVlZOB5YAOOQK;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;Apply for role;"As an Admin
+I want the status of job roles to update to ""closed"" when past closing date or no more roles
+So that I applicants can't apply for closed roles
+Acceptance Criteria
+API endpoint that updates any ""open"" job roles and set the status to ""closed"" if the closing date has passed or if the number of available positions is 0
+GitHub action to invoke the API endpoint each night"
+FuLucMHtuUKI4_zZSC7seJYABXNM;US056 - Role bulk import;MCPhoyHQiEyhs32l2acP-5YABvHo;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/5;"Meets Acceptance Criteria;Peer Review;Tested;Product Owner Approved;UX approved";Admin;"As an Admin
+I want to upload a CSV file with lots of job roles
+So that I can quickly add many new roles
+Acceptance criteria
+Bulk import button added to the job role list page for admins
+New page that allows CSV file upload and calls API when submitted
+New API endpoint which accepts CSV file, validates data is in correct format and adds each role to the database"
+bWoEACPPBEixpeXEIVi4b5YAPC4R;US057 - Email notifications;L0EO1c-x2kCR2Q-yVlZOB5YAOOQK;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;Apply for role;"As an Admin
+I want a email to be sent to applicants
+So they are aware when their application has been processed
+Acceptance criteria
+When the admin confirms ""hire"" of application an email (can use AWS SNS to send email, ask mentor to create) should be sent to the applicant to let them know their application was successful
+When the admin confirms ""reject"" of application an email (can use AWS SNS to send email, ask mentor to create) should be sent to the applicant to let them know their application was unsuccessful"
+FxYCFzE3hUWUv5xLQwL18JYAAdaG;US057 - Google Analytics;MCPhoyHQiEyhs32l2acP-5YABvHo;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;0/5;"Meets Acceptance Criteria;Peer Review;Tested;Product Owner Approved;UX approved";Admin;"As an Admin
+I want to see how many job applications are created in google analytics
+So that I can easily track the data
+Acceptance criteria
+Able to see the number of job applications created today via google analytics
+Able to see the number of job applications rejected today via google analytics
+Able to see the number of job applications hired today via google analytics"
+UuI9pCTBJEWcsAZoD2Gf45YACzb7;US060 - Pagination;L0EO1c-x2kCR2Q-yVlZOB5YAOOQK;;Nierozpoczęte;Średni;;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;;;;;NFR;"To prevent the website from crashing when too many roles exist I want to only see the first 10 results and be able to navigate forward to the next 10 results and back to the previous 10 results
+Acceptance criteria:
+Update job roles list page to only show 10 results
+Have first, next, previous and last links below results
+First should take me back to first 10 results
+next should take me to next 10 results (if more results exist)
+previous should take me to previous 10 results (if previous results exist)
+Last should take me to last results
+Update GET /job-roles API endpoint to take a query param to limit number of results and where the results should begin
+Tech notes:
+use query params in API to allow limit of results"
+DOO68WdsDESiKyNRVflWgZYAEw5B;Create CI/CD pipeline;3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Średni;259f2674-2abf-469b-a8b4-6cc20d34a526;c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;;;false;2026-08-12;259f2674-2abf-469b-a8b4-6cc20d34a526;;;NFR;"ACs
+Github actions flow that performs
+Build
+Linting
+Tests
+on both frontend and backend repositories.
+The pipeline must run when:
+A new pull request is opened
+A branch is merged into main or master
+PR merging must be blocked if the pipeline fails."
+IRyVoRPfHkui8VY9-thdEpYADI99;US061 - Unit tests;3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Wysoki;"259f2674-2abf-469b-a8b4-6cc20d34a526;9c5eb4ff-af7a-4860-8578-9ef3ef6702d3;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4";c6f4deb8-5229-41f9-85b4-fed37c67899e;2026-08-04;;2026-08-06;;false;2026-08-07;259f2674-2abf-469b-a8b4-6cc20d34a526;2/3;"Ability to run tests on frontend repo;Ability to get coverage percentage;Ability to run tests on backend repo";NFR;"Add in unit testing with ViTest to ensure we have automated tests against our code.
+ACs
+npm run test - should execute unit tests
+npm run test:ui - should execute ui tests (if required)
+npm run test:coverage - should generate a coverage report"
+srhe4_mSYESjJqWQgvcGcpYAB3UA;US001-01 - View Job Roles - UI;3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Ważne;9c5eb4ff-af7a-4860-8578-9ef3ef6702d3;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;2026-08-04;;2026-08-06;;false;2026-08-11;9c5eb4ff-af7a-4860-8578-9ef3ef6702d3;;;Applicant;"As a applicant
+I want to view job roles within Kainos
+So that I can see all the job roles available in Kainos
+Acceptance Criteria
+Can view a list of job roles within Kainos with the status ""open""
+role name
+location
+capability
+band
+closing date
+Tech notes:
+UI
+New JobRoleController with GET /job-roles route to render list of job roles (na ten moment mocki) \/
+New JobRoleService with axios call to GET /job-roles API endpoint - narazie nie ruszam
+New job-role-list.html view - wyswietlic liste ktora dostarczy mock na ten moment \/
+Test scenarios:
+Can view job roles
+Branch name: 001-01-view-job-roles"
+Q4uR506r6Ey4HOmXK66c0JYAGuQp;US001-02 - View Job Roles - API;3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Średni;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;2026-08-04;2026-08-10;2026-08-06;;false;2026-08-10;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;;;Applicant;"As a applicant
+I want to view job roles within Kainos
+So that I can see all the job roles available in Kainos
+Acceptance Criteria
+Can view a list of job roles within Kainos with the status ""open""
+role name
+location
+capability
+band
+closing date
+Tech notes:
+API
+New JobRoleController with GET /job-roles route to return list of job roles
+New JobRoleService which returns list of JobRoleResponse
+New JobRoleDao which queries job-role database table and returns list of JobRole
+New JobRoleResponse model
+New JobRole model
+New JobRoleMapper which maps JobRole to JobRoleResponse
+Test scenarios:
+Can view job roles
+Branch name: 001-02-view-job-roles"
+8LLr8NokgkaHGRPAhRSpdJYAHcWB;US001-03 - View Job Roles - Database;3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Średni;"259f2674-2abf-469b-a8b4-6cc20d34a526;9c5eb4ff-af7a-4860-8578-9ef3ef6702d3;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4";9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;2026-08-04;;;;false;2026-08-07;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;;;Applicant;"As a applicant
+I want to view job roles within Kainos
+So that I can see all the job roles available in Kainos
+Acceptance Criteria
+Can view a list of job roles within Kainos with the status ""open""
+role name
+location
+capability
+band
+closing date
+Tech notes:
+Database
+New job-roles table with jobRoleId, roleName, location, capabilityId, bandId, closingDate and status
+New capability table with capabilityId, capabilityName
+New band table with nameId, bandName
+Test scenarios:
+Can view job roles
+Branch name: 001-02-view-job-roles"
+v21vMEZDDUi-eUfpVnvDGJYABzxS;Environment setup - VS Code, Extensions, Debugger;3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Średni;"259f2674-2abf-469b-a8b4-6cc20d34a526;9c5eb4ff-af7a-4860-8578-9ef3ef6702d3;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4";9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;2026-08-05;2026-08-05;2026-08-05;;false;2026-08-05;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;;;NFR;Setup the VS Code files to make sure that all of the team members use the same setup, extensions & debugger settings
+n-ViI4IEQk25mDtl0Tga8pYAPugh;Logger - custom logs, request logging;3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Średni;"259f2674-2abf-469b-a8b4-6cc20d34a526;9c5eb4ff-af7a-4860-8578-9ef3ef6702d3;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4";9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;2026-08-05;;;;false;2026-08-10;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;;;NFR;"Create custom logging using Winston & Morgan
+Use structured logging - log as json
+Add context - i.e. include user ID, request id, correlation id"
+1lcBUX3VI0CrrGYu5pK075YAOH4H;US002-01-View job role information - API;3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Średni;259f2674-2abf-469b-a8b4-6cc20d34a526;259f2674-2abf-469b-a8b4-6cc20d34a526;2026-08-07;;;;false;2026-08-10;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;;;Applicant;"As an applicant
+I want to find job specification information about each role
+So that I know what is expected for each role
+Acceptance Criteria
+Able to click on the job role name in the job roles list page
+Can view:
+job role name
+description
+responsibilities
+link to Job Spec for each role in SharePoint
+Location
+capability
+band
+closing date
+status
+number of open positions
+Tech notes:
+Update job-role table to contain specification column
+Update UI to show specification (new page with link from job roles list page)
+New GET /job-roles/{id} API endpoint
+Tech notes:
+API
+New method in JobRoleController with GET /job-roles/{id} route to return job role
+New method in JobRoleService which returns JobRoleDetailedResponse
+New method in JobRoleDao which queries job-role database table and returns JobRole
+New JobRoleDetailedResponse model
+Update JobRole model to include new fields
+New method in JobRoleMapper to map JobRole to JobRoleDetailedResponse
+Branch name: 002-01 view-role-detail"
+cD7e9AYu9UyulLow0AC87pYAABLu;US015-01 - Edit a role - API;3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Średni;259f2674-2abf-469b-a8b4-6cc20d34a526;259f2674-2abf-469b-a8b4-6cc20d34a526;2026-08-10;;;;false;2026-08-11;259f2674-2abf-469b-a8b4-6cc20d34a526;;;Admin;"As an Admin
+I want to edit a role
+So that I can keep the software information up to date
+Acceptance criteria
+Able to update:
+Job role name
+Job description
+Sharepoint link
+Responsibilities
+Band (dropdown list)
+Capability (dropdown list)
+Status (dropdown list)
+Number of open positions
+Location
+closing date
+Input data must be validated in UI & API
+Able to edit the role from the job roles list page and the job specification page"
+UjVYRF6qKkCiTLC8db_rjJYAN81r;US012-01 - Add new role - API;3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Średni;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;2026-08-10;;;;false;2026-08-11;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;;;Admin;"As an Admin
+I want to add a new role to an existing capability and band
+So that I can keep the software information up to date
+Acceptance criteria
+Able to add a new role to an existing band and capability
+Able to add details to new role:
+Job role name
+Job spec summary
+Sharepoint link
+Responsibilities
+Number of open positions
+Location
+closing date
+Able to select band from dropdown of bands in database
+Able to select capability from dropdown on capabilities in database
+Input data must be validated on UI & API
+Able to create a role from the job roles list page
+Status should be set to ""open"" in database"
+qaHqztNAxke69Y2_lHRh9pYAKJWy;US002-02 - View job role information - UI;3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Średni;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;2026-08-11;;2026-08-11;;false;2026-08-12;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;;;Applicant;"As an applicant
+I want to find job specification information about each role
+So that I know what is expected for each role
+Acceptance Criteria
+Able to click on the job role name in the job roles list page
+Can view:
+job role name
+description
+responsibilities
+link to Job Spec for each role in SharePoint
+Location
+capability
+band
+closing date
+status
+number of open positions
+Tech notes:
+Update UI to show specification (new page with link from job roles list page
+Tech notes:
+UI
+New method in JobRoleController with GET /job-roles/{id} route to render job role information
+New method in JobRoleService with axios call to GET /job-roles/{id} API endpoint
+New job-role-information.html view
+Branch name: 002-02-view-role-detail"
+Xero6Xs4A06bdsmczdp7UZYAAWNk;Edit/Add role Form - UI;3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Średni;259f2674-2abf-469b-a8b4-6cc20d34a526;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;2026-08-11;;;;false;2026-08-12;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;;;;"Acceptance Criteria
+Admin can open the Edit Job Role form from the Job Roles list page.
+Admin can open the Edit Job Role form from the Job Specification page.
+Existing role data is automatically populated in all form fields when editing.
+Admin can modify:
+Job Role Name
+Job Description
+SharePoint Link
+Responsibilities
+Band
+Capability
+Status
+Number of Open Positions
+Location
+Closing Date
+Client-side validation is implemented and error messages are displayed appropriately.
+Form submission is blocked when validation errors are present.
+UI is responsive and accessible.
+Create and Edit screens share a common form implementation to reduce duplication."
+s190GzKHRkSxKsW3_SSZVZYAJAjf;Introduce Agentic Workflow, MCP Integration & Repository Memory;3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Średni;"259f2674-2abf-469b-a8b4-6cc20d34a526;9c5eb4ff-af7a-4860-8578-9ef3ef6702d3;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4";9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;2026-08-11;;;;false;2026-08-12;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;1/2;"for backend;for frontend";General;"Introduce an AI-supported development workflow that enables developers to use Copilot/agents consistently throughout the software delivery lifecycle, from task intake and planning through implementation, validation, handover, retrospective, and repository memory management. The solution should also explore MCP integration with Microsoft Planner to connect work management and development activities.
+Scope
+Define and document the agentic development lifecycle:
+Intake
+Planning
+Implementation
+Validation
+Handover
+Retrospective
+Memory updates
+Create initial AI guidance files:
+AGENTS.md
+.github/copilot-instructions.md
+Define validation gates (lint, typecheck, unit, integration and E2E tests where applicable).
+Evaluate MCP integration with Microsoft Planner, allowing agents to:
+Read task context
+Update progress notes
+Generate implementation summaries and handover information
+Respect human approval for status transitions such as Ready for QA, Done, or Released.
+Introduce repository memory structure:
+docs/ai/memory.md
+docs/ai/decisions.md
+docs/ai/retrospectives/*.md
+Define retrospective and learning process:
+Agent proposes retrospective
+Developer reviews and approves
+Accepted lessons are stored in repository memory
+AI instructions are updated when beneficial
+Future tasks leverage accumulated project knowledge.
+Acceptance Criteria
+Agentic workflow documented and available to the team.
+Initial AGENTS.md and Copilot instruction files created.
+MCP usage and guardrails documented.
+Validation and handover processes defined.
+Repository memory structure established.
+Retrospective template created.
+Process defined for promoting approved lessons into:
+memory.md
+decisions.md
+AGENTS.md
+copilot-instructions.md
+Example retrospective completed for at least one task, demonstrating the memory update flow.
+Expected Outcome can be found in the PDF from Dawid (AI supported development) on Teams."
+66Qs0LZi-ki5dzXt0ooOM5YAAgOc;Create CI/CD pipeline - backend;3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Średni;259f2674-2abf-469b-a8b4-6cc20d34a526;259f2674-2abf-469b-a8b4-6cc20d34a526;2026-08-11;;;;false;2026-08-12;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;;;General;"ACs
+Github actions flow that performs
+Build
+Linting
+Tests
+on both frontend and backend repositories.
+The pipeline must run when:
+A new pull request is opened
+A branch is merged into main or master
+PR merging must be blocked if the pipeline fails."
+GXXbpyVYkEKwQXaPmO5hWJYAHCj3;Create CI/CD pipeline-frontend;3WPtnZyMH0q9IK8ZZcWcs5YAOs_h;;Ukończone;Średni;259f2674-2abf-469b-a8b4-6cc20d34a526;259f2674-2abf-469b-a8b4-6cc20d34a526;2026-08-11;;;;false;2026-08-12;259f2674-2abf-469b-a8b4-6cc20d34a526;;;General;"ACs
+Github actions flow that performs
+Build
+Linting
+Tests
+on both frontend and backend repositories.
+The pipeline must run when:
+A new pull request is opened
+A branch is merged into main or master
+PR merging must be blocked if the pipeline fails."
+8cIeIaWCjkCZXdryC5Td35YADzaW;US040 - Login System - only frontend tasks;e039A1kZxE6JE1OLrA1VGpYALYkx;;W toku;Średni;9c5eb4ff-af7a-4860-8578-9ef3ef6702d3;259f2674-2abf-469b-a8b4-6cc20d34a526;2026-08-12;;;;false;;;0/2;"frontend;backend connetcion";Security;"Acceptance Criteria
+User must log in with email and password
+User must be able to log out
+If email and password match database record, generate a JWT token
+JWT token should be stored in browser session
+Password should be salted and hashed before comparing to database: https://youtu.be/zt8Cocdy15c?si=u74kFMHTvILDY1P_"
+nAD2HD3jOke7lnLlwKVPwZYAM5oW;US024 - Registration System - only frontend;r8cK4ko2SUyrR4e65pe5iJYAKZLo;;Nierozpoczęte;Średni;9c5eb4ff-af7a-4860-8578-9ef3ef6702d3;259f2674-2abf-469b-a8b4-6cc20d34a526;2026-08-12;;;;false;;;0/2;"backend connection;frontend";Security;"Acceptance Criteria
+User must be able to register with email, password
+Role should default to ""user"" role in database (not admin)
+Email must be a valid email format
+Password much be more than 8 chars with upper, lower and special char
+Password should be salted and hashed (https://youtu.be/zt8Cocdy15c?si=u74kFMHTvILDY1P_)"
+Us_1FoNY-kePu2oA8NUmhpYAEWeO;US024 - Registration System - API;r8cK4ko2SUyrR4e65pe5iJYAKZLo;;Nierozpoczęte;Średni;"259f2674-2abf-469b-a8b4-6cc20d34a526;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4";259f2674-2abf-469b-a8b4-6cc20d34a526;2026-08-12;;;;false;;;0/2;"frontend;backend connection";Security;"Acceptance Criteria
+User must be able to register with email, password
+Role should default to ""user"" role in database (not admin)
+Email must be a valid email format
+Password much be more than 8 chars with upper, lower and special char
+Password should be salted and hashed (https://youtu.be/zt8Cocdy15c?si=u74kFMHTvILDY1P_)"
+p3sn7Xn_cki4Nc16IBwgQ5YANECA;US041 - Authorisation System - API;r8cK4ko2SUyrR4e65pe5iJYAKZLo;;Nierozpoczęte;Średni;"259f2674-2abf-469b-a8b4-6cc20d34a526;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4";259f2674-2abf-469b-a8b4-6cc20d34a526;2026-08-12;;;;false;;;;;Security;"Acceptance Criteria
+Recruitment Admin must have access to all endpoints (frontend and backend)
+Applicant user will only have access to list and information endpoints (frontend and backend), not create, update & delete
+Non-logged in users should be redirected to login page
+Token should be required on all API endpoints other than Registration and Login"
+-i4RuKOK-UGU_hc5-g3il5YAKSoS;US040 - Login System - API;r8cK4ko2SUyrR4e65pe5iJYAKZLo;;Nierozpoczęte;Średni;"259f2674-2abf-469b-a8b4-6cc20d34a526;9033bf62-a43d-4073-9e2a-fdfba5cf0dc4";9033bf62-a43d-4073-9e2a-fdfba5cf0dc4;2026-08-12;;;;false;;;0/2;"frontend;backend connetcion";Security;"Acceptance Criteria
+User must log in with email and password
+User must be able to log out
+If email and password match database record, generate a JWT token
+JWT token should be stored in browser session
+Password should be salted and hashed before comparing to database: https://youtu.be/zt8Cocdy15c?si=u74kFMHTvILDY1P_"
+Dvj72XPpCUyY3lm7givZ45YAD2xk;US020 - Delete a role - UI;e039A1kZxE6JE1OLrA1VGpYALYkx;;Nierozpoczęte;Średni;259f2674-2abf-469b-a8b4-6cc20d34a526;259f2674-2abf-469b-a8b4-6cc20d34a526;2026-08-12;;;;false;;;;;Admin;"As an Admin
+I want to delete a role
+So that I can keep the software information up to date
+Acceptance criteria
+Able to delete the role from the job roles list page and the job specification page
+Warning must appear asking for confirmation before deletion"
