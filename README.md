@@ -135,6 +135,49 @@ The app listens on the port from `PORT` (default `3000`): http://localhost:3000
 | `npm run check` | Format + lint, writing changes |
 | `npm run ci:check` | CI verification (no writes) |
 
+## Docker images and frontend E2E
+
+GitHub Actions publishes multi-architecture (`linux/amd64`, `linux/arm64`) images to GitHub Container
+Registry. A merge or direct push to `main` publishes the production image; pull requests to `main` and
+pushes to `main` publish the E2E image.
+
+| Purpose | Image tag |
+| --- | --- |
+| Production API | `ghcr.io/kainos-academy-2026-gdansk/team7-backend:sha-<commit>` and `latest` |
+| Frontend E2E | `ghcr.io/kainos-academy-2026-gdansk/team7-backend:e2e-sha-<commit>` and `e2e-latest` |
+
+Use the immutable `e2e-sha-<commit>` tag to make a frontend E2E run reproducible. `e2e-latest` is a
+convenience tag only.
+
+The E2E image includes the compiled API, Prisma CLI and `tsx` for `prisma/seed.ts`. It is intended only
+for frontend E2E environments; the production image excludes development dependencies.
+
+The E2E Compose stack should run the image in two services. `seed` applies migrations and seeds the
+database, while `backend` starts the API after `seed` completes successfully:
+
+```yaml
+services:
+  seed:
+    image: ghcr.io/kainos-academy-2026-gdansk/team7-backend:e2e-sha-<commit>
+    command: sh -c "npx prisma migrate deploy && npx prisma db seed"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+
+  backend:
+    image: ghcr.io/kainos-academy-2026-gdansk/team7-backend:e2e-sha-<commit>
+    command: node dist/index.js
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+```
+
+`DATABASE_URL` and `JWT_SECRET` must be supplied by the frontend E2E environment and must not be stored
+in a Compose file or committed to either repository.
+
 ## Project structure
 
 ```

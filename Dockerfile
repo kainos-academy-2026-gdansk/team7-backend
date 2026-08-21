@@ -43,12 +43,16 @@ COPY prisma ./prisma
 COPY src ./src
 # prisma resolves from node_modules, so no dynamic npx fetch at build time
 RUN npx prisma generate && npm run build
+
+
+########## Stage 3: production dependencies ##########
+FROM build AS production-deps
 # Drop dev dependencies; prisma + @prisma/client are runtime deps and survive
 RUN npm prune --omit=dev
 
 
-########## Stage 3: runtime ##########
-FROM node:22-alpine AS runner
+########## Stage 4: shared runtime ##########
+FROM node:22-alpine AS runtime
 RUN apk add --no-cache openssl ca-certificates
 WORKDIR /app
 ENV NODE_ENV=production \
@@ -59,13 +63,28 @@ COPY --from=base /usr/local/share/certs/zscaler-chain.pem /usr/local/share/certs
 COPY --from=base /usr/local/share/ca-certificates/zscaler-chain.crt /usr/local/share/ca-certificates/zscaler-chain.crt
 RUN update-ca-certificates
 
+# Winston writes to ./logs at import time; /app itself stays root-owned
+RUN mkdir -p /app/logs && chown node:node /app/logs
+
+
+########## Stage 5: E2E runtime ##########
+FROM runtime AS e2e
 COPY --from=build --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/dist ./dist
 COPY --chown=node:node prisma ./prisma
 COPY --chown=node:node package.json ./
 
-# Winston writes to ./logs at import time; /app itself stays root-owned
-RUN mkdir -p /app/logs && chown node:node /app/logs
+USER node
+EXPOSE 3000
+CMD ["node", "dist/index.js"]
+
+
+########## Stage 6: production runtime ##########
+FROM runtime AS runner
+COPY --from=production-deps --chown=node:node /app/node_modules ./node_modules
+COPY --from=production-deps --chown=node:node /app/dist ./dist
+COPY --chown=node:node prisma ./prisma
+COPY --chown=node:node package.json ./
 
 USER node
 EXPOSE 3000
