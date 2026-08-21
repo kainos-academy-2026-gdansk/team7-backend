@@ -80,6 +80,8 @@ jobs:
           target: e2e
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/${{ github.repository }}:e2e-sha-${{ github.sha }}
+          tags: |
+            ghcr.io/${{ github.repository }}:e2e-sha-${{ github.sha }}
+            ghcr.io/${{ github.repository }}:e2e-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
