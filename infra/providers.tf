@@ -12,7 +12,7 @@ terraform {
     resource_group_name  = "team-7"
     storage_account_name = "team7fstate"
     container_name       = "tfstate"
-    key                  = "team7.tfstate"
+    key                  = "team7-backend.tfstate"
     use_azuread_auth     = true
   }
 }
