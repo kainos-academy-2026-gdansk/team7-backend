@@ -27,3 +27,23 @@ output "key_vault_uri" {
   description = "URI of the Key Vault."
   value       = module.key_vault.uri
 }
+
+output "container_app_environment_name" {
+  description = "Name of the shared Container Apps Environment."
+  value       = module.container_app_environment.container_app_environment_name
+}
+
+output "container_app_environment_id" {
+  description = "Resource ID of the shared Container Apps Environment."
+  value       = module.container_app_environment.container_app_environment_id
+}
+
+output "log_analytics_workspace_name" {
+  description = "Name of the shared Log Analytics Workspace."
+  value       = module.container_app_environment.log_analytics_workspace_name
+}
+
+output "log_analytics_workspace_id" {
+  description = "Resource ID of the shared Log Analytics Workspace."
+  value       = module.container_app_environment.log_analytics_workspace_id
+}

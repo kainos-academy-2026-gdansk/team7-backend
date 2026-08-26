@@ -17,3 +17,13 @@ module "key_vault" {
   tenant_id           = data.azurerm_client_config.current.tenant_id
   environment         = var.environment
 }
+
+module "container_app_environment" {
+  source = "./modules/container-app-environment"
+
+  container_app_environment_name = var.container_app_environment_name
+  log_analytics_workspace_name   = var.log_analytics_workspace_name
+  resource_group_name            = module.resource_group.name
+  location                       = module.resource_group.location
+  environment                    = var.environment
+}

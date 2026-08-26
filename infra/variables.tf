@@ -31,3 +31,15 @@ variable "key_vault_name" {
     error_message = "Key Vault names must contain 3-24 letters, numbers, or hyphens, start with a letter, and end with a letter or number."
   }
 }
+
+variable "container_app_environment_name" {
+  description = "Name of the shared Container Apps Environment."
+  type        = string
+  default     = "team7-cae-dev"
+}
+
+variable "log_analytics_workspace_name" {
+  description = "Name of the shared Log Analytics Workspace."
+  type        = string
+  default     = "team7-law-dev"
+}
