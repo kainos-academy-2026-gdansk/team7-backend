@@ -1,0 +1,3 @@
+resource_group_name = "team-7"
+location            = "uksouth"
+environment         = "dev"

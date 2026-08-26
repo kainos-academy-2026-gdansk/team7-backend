@@ -1,0 +1,5 @@
+resource_group_name  = "team-7"
+storage_account_name = "team7fstatewiktor"
+container_name       = "tfstate"
+key                  = "team7.tfstate"
+use_azuread_auth     = true
