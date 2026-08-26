@@ -20,3 +20,14 @@ variable "environment" {
     error_message = "Environment must be dev, test, or prod."
   }
 }
+
+variable "key_vault_name" {
+  description = "Globally unique name of the Key Vault."
+  type        = string
+  default     = "team7-KV"
+
+  validation {
+    condition     = can(regex("^[a-zA-Z][a-zA-Z0-9-]{1,22}[a-zA-Z0-9]$", var.key_vault_name))
+    error_message = "Key Vault names must contain 3-24 letters, numbers, or hyphens, start with a letter, and end with a letter or number."
+  }
+}
