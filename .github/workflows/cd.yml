@@ -2,7 +2,7 @@ name: CD
 
 on:
   push:
-    branches: [main]
+    branches: [main, terraform-setup]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -63,7 +63,7 @@ jobs:
       - uses: docker/setup-buildx-action@v3
 
       - name: Log in to Azure for the main branch publish
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/terraform-setup')
         uses: azure/login@v2
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
@@ -71,7 +71,7 @@ jobs:
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
       - name: Log Docker in to ACR
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/terraform-setup')
         env:
           ACR_NAME: ${{ env.ACR_NAME }}
         run: az acr login --name "$ACR_NAME"
@@ -83,13 +83,13 @@ jobs:
           file: ./Dockerfile
           target: runner
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          push: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/terraform-setup') }}
           tags: ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Verify the pushed ACR image
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/terraform-setup')
         env:
           ACR_NAME: ${{ env.ACR_NAME }}
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
@@ -105,7 +105,7 @@ jobs:
       id-token: write
     defaults:
       run:
-        working-directory: infrastrukture
+        working-directory: infra
     env:
       ARM_USE_OIDC: "true"
       ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
@@ -137,7 +137,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: terraform-plan-${{ github.sha }}
-          path: infrastrukture/tfplan
+          path: infra/tfplan
           retention-days: 1
 
   terraform-apply:
@@ -152,7 +152,7 @@ jobs:
       id-token: write
     defaults:
       run:
-        working-directory: infrastrukture
+        working-directory: infra
     env:
       ARM_USE_OIDC: "true"
       ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
@@ -179,6 +179,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: terraform-plan-${{ github.sha }}
-          path: infrastrukture
+          path: infra
 
       - run: terraform apply -input=false -auto-approve tfplan
