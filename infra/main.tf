@@ -46,9 +46,8 @@ module "backend_container_app" {
   container_registry_id           = data.azurerm_container_registry.backend.id
   container_image                 = var.container_image
 
-  key_vault_id = module.key_vault.id
-  database_url = var.database_url
-  jwt_secret   = var.jwt_secret
+  key_vault_id  = module.key_vault.id
+  key_vault_uri = module.key_vault.uri
 
   target_port              = var.target_port
   ingress_external_enabled = var.ingress_external_enabled

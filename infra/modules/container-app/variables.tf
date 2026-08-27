@@ -43,16 +43,9 @@ variable "key_vault_id" {
   type        = string
 }
 
-variable "database_url" {
-  description = "PostgreSQL connection string for the backend, stored as a Key Vault secret."
+variable "key_vault_uri" {
+  description = "URI of the Key Vault used to build versionless secret references."
   type        = string
-  sensitive   = true
-}
-
-variable "jwt_secret" {
-  description = "JWT signing secret for the backend, stored as a Key Vault secret."
-  type        = string
-  sensitive   = true
 }
 
 variable "target_port" {

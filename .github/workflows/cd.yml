@@ -116,18 +116,8 @@ jobs:
       TF_VAR_resource_group_name: team-7
       TF_VAR_location: uksouth
       TF_VAR_container_image: ${{ vars.ACR_LOGIN_SERVER }}/team7-backend:sha-${{ github.sha }}
-      TF_VAR_database_url: ${{ secrets.DATABASE_URL }}
-      TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Check Terraform secrets
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-        run: |
-          test -n "$DATABASE_URL" || { echo "Repository secret DATABASE_URL is required"; exit 1; }
-          test -n "$JWT_SECRET" || { echo "Repository secret JWT_SECRET is required"; exit 1; }
 
       - name: Log in to Azure
         uses: azure/login@v2

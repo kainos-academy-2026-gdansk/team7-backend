@@ -17,19 +17,7 @@ resource "azurerm_role_assignment" "acr_pull" {
   principal_id         = azurerm_user_assigned_identity.container_app.principal_id
 }
 
-resource "azurerm_key_vault_secret" "database_url" {
-  name         = "database-url"
-  value        = var.database_url
-  key_vault_id = var.key_vault_id
-}
-
-resource "azurerm_key_vault_secret" "jwt_secret" {
-  name         = "jwt-secret"
-  value        = var.jwt_secret
-  key_vault_id = var.key_vault_id
-}
-
-# Lets the container read the secrets above from Key Vault at runtime
+# Lets the container read the manually managed secrets from Key Vault at runtime
 resource "azurerm_role_assignment" "key_vault_secrets_user" {
   scope                = var.key_vault_id
   role_definition_name = "Key Vault Secrets User"
@@ -54,13 +42,13 @@ resource "azurerm_container_app" "backend" {
 
   secret {
     name                = "database-url"
-    key_vault_secret_id = azurerm_key_vault_secret.database_url.versionless_id
+    key_vault_secret_id = "${trimsuffix(var.key_vault_uri, "/")}/secrets/database-url"
     identity            = azurerm_user_assigned_identity.container_app.id
   }
 
   secret {
     name                = "jwt-secret"
-    key_vault_secret_id = azurerm_key_vault_secret.jwt_secret.versionless_id
+    key_vault_secret_id = "${trimsuffix(var.key_vault_uri, "/")}/secrets/jwt-secret"
     identity            = azurerm_user_assigned_identity.container_app.id
   }
 
@@ -105,6 +93,7 @@ resource "azurerm_container_app" "backend" {
   ingress {
     external_enabled = var.ingress_external_enabled
     target_port      = var.target_port
+    transport        = "auto"
 
     traffic_weight {
       latest_revision = true

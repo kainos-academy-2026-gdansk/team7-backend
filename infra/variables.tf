@@ -67,18 +67,6 @@ variable "container_image" {
   type        = string
 }
 
-variable "database_url" {
-  description = "PostgreSQL connection string for the backend. Stored as a Key Vault secret; never commit a real value."
-  type        = string
-  sensitive   = true
-}
-
-variable "jwt_secret" {
-  description = "JWT signing secret for the backend. Stored as a Key Vault secret; never commit a real value."
-  type        = string
-  sensitive   = true
-}
-
 variable "target_port" {
   description = "Port the backend container listens on."
   type        = number

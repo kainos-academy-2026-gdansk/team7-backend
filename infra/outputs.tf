@@ -48,6 +48,11 @@ output "log_analytics_workspace_id" {
   value       = module.container_app_environment.log_analytics_workspace_id
 }
 
+output "acr_login_server" {
+  description = "Login server of the existing Azure Container Registry."
+  value       = data.azurerm_container_registry.backend.login_server
+}
+
 output "backend_container_app_name" {
   description = "Name of the backend Container App."
   value       = module.backend_container_app.container_app_name
@@ -56,4 +61,9 @@ output "backend_container_app_name" {
 output "backend_container_app_fqdn" {
   description = "Public FQDN of the backend Container App."
   value       = module.backend_container_app.container_app_fqdn
+}
+
+output "backend_container_app_identity_principal_id" {
+  description = "Principal ID of the backend Container App's user-assigned managed identity."
+  value       = module.backend_container_app.container_app_identity_principal_id
 }
