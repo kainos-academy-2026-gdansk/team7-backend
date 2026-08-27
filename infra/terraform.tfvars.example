@@ -1,3 +1,8 @@
 resource_group_name = "team-7"
 location            = "uksouth"
 environment         = "dev"
+
+# Required, no default committed - set via TF_VAR_* or an untracked tfvars file:
+# container_image = "acraiacademy26.azurecr.io/team7-backend:sha-<commit>"
+# database_url    = "postgresql://<user>:<password>@<host>:5432/<db>"
+# jwt_secret       = "<jwt-signing-secret>"

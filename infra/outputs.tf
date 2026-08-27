@@ -47,3 +47,13 @@ output "log_analytics_workspace_id" {
   description = "Resource ID of the shared Log Analytics Workspace."
   value       = module.container_app_environment.log_analytics_workspace_id
 }
+
+output "backend_container_app_name" {
+  description = "Name of the backend Container App."
+  value       = module.backend_container_app.container_app_name
+}
+
+output "backend_container_app_fqdn" {
+  description = "Public FQDN of the backend Container App."
+  value       = module.backend_container_app.container_app_fqdn
+}
