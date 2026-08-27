@@ -94,13 +94,19 @@ variable "postgresql_administrator_password_secret_name" {
 variable "postgresql_administrator_password_version" {
   description = "Version counter incremented when rotating the PostgreSQL administrator password."
   type        = number
-  default     = 2
+  default     = 3
 }
 
 variable "postgresql_version" {
   description = "Major PostgreSQL version."
   type        = string
   default     = "16"
+}
+
+variable "postgresql_zone" {
+  description = "Availability zone assigned to the PostgreSQL Flexible Server."
+  type        = string
+  default     = "2"
 }
 
 variable "postgresql_sku_name" {

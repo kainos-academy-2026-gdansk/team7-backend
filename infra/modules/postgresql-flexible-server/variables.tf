@@ -48,6 +48,11 @@ variable "postgresql_version" {
   type        = string
 }
 
+variable "zone" {
+  description = "Availability zone assigned to the PostgreSQL Flexible Server."
+  type        = string
+}
+
 variable "sku_name" {
   description = "Compute SKU of the PostgreSQL Flexible Server."
   type        = string

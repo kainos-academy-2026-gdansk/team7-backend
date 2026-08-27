@@ -38,6 +38,7 @@ module "postgresql" {
   administrator_password_version     = var.postgresql_administrator_password_version
 
   postgresql_version = var.postgresql_version
+  zone               = var.postgresql_zone
   sku_name           = var.postgresql_sku_name
   storage_mb         = var.postgresql_storage_mb
   storage_tier       = var.postgresql_storage_tier
