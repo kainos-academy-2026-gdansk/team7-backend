@@ -2,5 +2,10 @@ resource_group_name = "team-7"
 location            = "uksouth"
 environment         = "dev"
 
+postgresql_server_name                         = "team7-postgres-dev"
+postgresql_database_name                       = "team7"
+postgresql_administrator_login                 = "team7admin"
+postgresql_administrator_password_secret_name = "postgres-admin-password"
+
 # Required, no default committed - set via TF_VAR_* or an untracked tfvars file:
 # container_image = "acraiacademy26.azurecr.io/team7-backend:sha-<commit>"

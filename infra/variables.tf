@@ -62,6 +62,65 @@ variable "container_registry_resource_group_name" {
   default     = "rg-ai-academy-26"
 }
 
+variable "postgresql_server_name" {
+  description = "Globally unique name of the PostgreSQL Flexible Server."
+  type        = string
+  default     = "team7-postgres-dev"
+
+  validation {
+    condition     = can(regex("^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])$", var.postgresql_server_name))
+    error_message = "PostgreSQL server names must contain 3-63 lowercase letters, numbers, or hyphens and cannot start or end with a hyphen."
+  }
+}
+
+variable "postgresql_database_name" {
+  description = "Name of the backend application database."
+  type        = string
+  default     = "team7"
+}
+
+variable "postgresql_administrator_login" {
+  description = "Administrator login for the PostgreSQL Flexible Server."
+  type        = string
+  default     = "team7admin"
+}
+
+variable "postgresql_administrator_password_secret_name" {
+  description = "Name of the manually managed Key Vault secret containing the PostgreSQL administrator password."
+  type        = string
+  default     = "postgres-admin-password"
+}
+
+variable "postgresql_administrator_password_version" {
+  description = "Version counter incremented when rotating the PostgreSQL administrator password."
+  type        = number
+  default     = 1
+}
+
+variable "postgresql_version" {
+  description = "Major PostgreSQL version."
+  type        = string
+  default     = "16"
+}
+
+variable "postgresql_sku_name" {
+  description = "Compute SKU for the PostgreSQL Flexible Server."
+  type        = string
+  default     = "B_Standard_B1ms"
+}
+
+variable "postgresql_storage_mb" {
+  description = "Provisioned PostgreSQL storage in MiB."
+  type        = number
+  default     = 32768
+}
+
+variable "postgresql_storage_tier" {
+  description = "Storage performance tier for the PostgreSQL Flexible Server."
+  type        = string
+  default     = "P4"
+}
+
 variable "container_image" {
   description = "Full image reference for the backend Container App, e.g. <login-server>/team7-backend:<tag>."
   type        = string

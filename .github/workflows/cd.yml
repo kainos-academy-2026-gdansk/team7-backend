@@ -126,6 +126,14 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Check PostgreSQL administrator password
+        run: |
+          az keyvault secret show \
+            --vault-name team7-KV \
+            --name postgres-admin-password \
+            --query id \
+            --output tsv >/dev/null
+
       - uses: hashicorp/setup-terraform@v3
 
       - run: terraform fmt -check -recursive

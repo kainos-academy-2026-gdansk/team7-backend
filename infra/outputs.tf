@@ -28,6 +28,26 @@ output "key_vault_uri" {
   value       = module.key_vault.uri
 }
 
+output "postgresql_server_name" {
+  description = "Name of the PostgreSQL Flexible Server."
+  value       = module.postgresql.name
+}
+
+output "postgresql_server_fqdn" {
+  description = "FQDN of the PostgreSQL Flexible Server."
+  value       = module.postgresql.fqdn
+}
+
+output "postgresql_database_name" {
+  description = "Name of the backend application database."
+  value       = module.postgresql.database_name
+}
+
+output "postgresql_administrator_login" {
+  description = "Administrator login used by the PostgreSQL server."
+  value       = module.postgresql.administrator_login
+}
+
 output "container_app_environment_name" {
   description = "Name of the shared Container Apps Environment."
   value       = module.container_app_environment.container_app_environment_name

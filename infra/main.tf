@@ -23,6 +23,26 @@ module "key_vault" {
   environment         = var.environment
 }
 
+module "postgresql" {
+  source = "./modules/postgresql-flexible-server"
+
+  server_name         = var.postgresql_server_name
+  database_name       = var.postgresql_database_name
+  resource_group_name = module.resource_group.name
+  location            = module.resource_group.location
+  environment         = var.environment
+
+  key_vault_id                       = module.key_vault.id
+  administrator_login                = var.postgresql_administrator_login
+  administrator_password_secret_name = var.postgresql_administrator_password_secret_name
+  administrator_password_version     = var.postgresql_administrator_password_version
+
+  postgresql_version = var.postgresql_version
+  sku_name           = var.postgresql_sku_name
+  storage_mb         = var.postgresql_storage_mb
+  storage_tier       = var.postgresql_storage_tier
+}
+
 module "container_app_environment" {
   source = "./modules/container-app-environment"
 
