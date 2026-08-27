@@ -56,6 +56,8 @@ module "container_app_environment" {
 module "backend_container_app" {
   source = "./modules/container-app"
 
+  depends_on = [module.postgresql]
+
   container_app_name           = var.container_app_name
   resource_group_name          = module.resource_group.name
   location                     = module.resource_group.location
