@@ -94,7 +94,7 @@ variable "postgresql_administrator_password_secret_name" {
 variable "postgresql_administrator_password_version" {
   description = "Version counter incremented when rotating the PostgreSQL administrator password."
   type        = number
-  default     = 1
+  default     = 2
 }
 
 variable "postgresql_version" {
